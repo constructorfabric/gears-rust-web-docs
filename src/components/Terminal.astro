@@ -30,18 +30,18 @@ const { title = 'shell' } = Astro.props;
 
 <style>
   .gears-terminal {
-    border: 1px solid var(--gears-hairline);
+    border: 1px solid var(--gears-code-border);
     border-radius: 0.4rem;
     overflow: hidden;
-    background: #1a1d21;
+    background: var(--gears-code-bg);
   }
   .gears-terminal__bar {
     display: flex;
     align-items: center;
     gap: 0.6rem;
     padding: 0.45rem 0.75rem;
-    background: #15171a;
-    border-bottom: 1px solid var(--gears-hairline);
+    background: var(--gears-code-bar);
+    border-bottom: 1px solid var(--gears-code-border);
   }
   .gears-terminal__dots {
     display: inline-flex;
@@ -51,7 +51,7 @@ const { title = 'shell' } = Astro.props;
     width: 0.55rem;
     height: 0.55rem;
     border-radius: 50%;
-    background: #2a2e34;
+    background: var(--gears-code-border);
   }
   .gears-terminal__dots i:first-child {
     background: var(--gears-accent);
@@ -66,7 +66,7 @@ const { title = 'shell' } = Astro.props;
     padding: 0.25rem 0.75rem;
     font-family: var(--sl-font-mono);
     font-size: 0.85rem;
-    color: #e6e8ea;
+    color: var(--gears-code-text);
   }
   /* let nested Expressive Code blocks sit flush inside the frame */
   .gears-terminal__body :global(.expressive-code) {

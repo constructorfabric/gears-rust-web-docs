@@ -56,6 +56,14 @@
   --gears-radius-card: 16px;
   --gears-radius-pill: 99px;
 
+  /* Code surfaces — intentionally dark in BOTH site modes (matching the
+     always-dark Expressive Code blocks); not redefined for light mode.
+     Keep in sync with the expressiveCode styleOverrides in astro.config.mjs. */
+  --gears-code-bg: #161a20;
+  --gears-code-bar: #0f1217;
+  --gears-code-border: #262d37;
+  --gears-code-text: #e6e9ec;
+
   /* Typography */
   --sl-font: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --sl-font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
@@ -191,4 +199,24 @@
 
 .sl-markdown-content a:not(:where(.not-content *)) {
   text-underline-offset: 0.2em;
+}
+
+/* ---------------------------------------------------------------- *
+ * ConceptDiagram — theme swap between light/dark artwork
+ * ---------------------------------------------------------------- */
+:root[data-theme='dark'] .gears-diagram__img--light {
+  display: none;
+}
+:root[data-theme='light'] .gears-diagram__img--dark {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- *
+ * Reduced motion
+ * ---------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .sl-link-button {
+    transition: none;
+  }
 }

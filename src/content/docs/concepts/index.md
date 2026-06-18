@@ -40,12 +40,13 @@ only the interface: a transport-agnostic trait, models, and error types. The
 implementation depends on the SDK, never the other way around.
 
 ```rust
-// users-info-sdk/src/client.rs — the public facade trait
+// users-info-sdk/src/client.rs — the public facade trait (abridged)
 #[async_trait]
 pub trait UsersInfoClientV1: Send + Sync {
     async fn get_user(&self, ctx: SecurityContext, id: Uuid) -> Result<User, UsersInfoError>;
     async fn create_user(&self, ctx: SecurityContext, new_user: NewUser) -> Result<User, UsersInfoError>;
     async fn delete_user(&self, ctx: SecurityContext, id: Uuid) -> Result<(), UsersInfoError>;
+    // …additional methods omitted (the real trait also exposes streaming sub-clients)
 }
 ```
 

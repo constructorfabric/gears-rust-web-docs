@@ -65,13 +65,5 @@ const hasVariants = Boolean(srcDark);
     color: var(--gears-text-muted);
     text-align: center;
   }
-</style>
-
-<style is:global>
-  :root[data-theme='dark'] .gears-diagram__img--light {
-    display: none;
-  }
-  :root[data-theme='light'] .gears-diagram__img--dark {
-    display: none;
-  }
+  /* The light/dark artwork swap lives in theme.css (shared, deduplicated). */
 </style>

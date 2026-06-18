@@ -23,18 +23,21 @@ export default defineConfig({
       ],
       // Code blocks: a consistent graphite surface in both site modes, with a
       // restrained brass accent on the active tab / frame chrome.
+      // Code blocks: a consistent graphite surface in both site modes, with the
+      // brand-blue accent on the active tab. Values mirror the --gears-code-*
+      // tokens in theme.css (Expressive Code overrides cannot read CSS variables).
       expressiveCode: {
         themes: ['github-dark'],
         styleOverrides: {
           borderRadius: '0.3rem',
-          borderColor: '#2a2e34',
-          codeBackground: '#1a1d21',
+          borderColor: '#262d37',
+          codeBackground: '#161a20',
           frames: {
-            editorActiveTabIndicatorTopColor: '#d8a657',
-            editorActiveTabBackground: '#1d2024',
-            editorTabBarBackground: '#15171a',
-            terminalTitlebarBackground: '#15171a',
-            terminalBackground: '#1a1d21',
+            editorActiveTabIndicatorTopColor: '#4f9fe0',
+            editorActiveTabBackground: '#1d232b',
+            editorTabBarBackground: '#0f1217',
+            terminalTitlebarBackground: '#0f1217',
+            terminalBackground: '#161a20',
           },
         },
       },
