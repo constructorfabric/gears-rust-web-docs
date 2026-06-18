@@ -1,0 +1,238 @@
+---
+title: Build your first gear
+description: Write an SDK, a domain service, and a REST endpoint, and wire it into the Gears runtime.
+sidebar:
+  label: Your first gear
+  order: 3
+---
+
+import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+This walkthrough builds a tiny **`greeter`** gear that exposes one REST endpoint and one
+SDK method. It uses the real Gears building blocks — the `#[toolkit::gear]` macro, the
+`Gear` lifecycle, `ClientHub`, and `OperationBuilder` — kept deliberately minimal so the
+pattern is clear.
+
+<Aside type="note" title="Compilable references">
+The snippets below show the *shape* of each piece. For complete, compiling code see the
+examples in the framework repository: **`examples/toolkit/users-info`** (in-process gear
+with a database, authorization, and OData) and **`examples/oop-gears/calculator`**
+(out-of-process gear over gRPC).
+</Aside>
+
+## The layout
+
+A gear is two crates — the SDK (its public surface) and the implementation:
+
+```
+gears/greeter/
+├─ greeter-sdk/                  # public API: trait, models, errors (what consumers import)
+│  └─ src/{lib,client,models,errors}.rs
+└─ greeter/                      # implementation
+   └─ src/
+      ├─ gear.rs                 # the gear struct + lifecycle + capabilities
+      ├─ domain/                 # business logic (types carry #[domain_model])
+      └─ api/rest/{dto,handlers,routes}.rs
+```
+
+Gear names use **kebab-case** (`greeter`, `users-info`), the SDK crate is suffixed `-sdk`.
+
+## Steps
+
+<Steps>
+
+1.  ### Define the SDK facade trait
+
+    The SDK crate holds the transport-agnostic contract. Every method takes a
+    `SecurityContext` first and returns the canonical error type.
+
+    ```rust title="greeter-sdk/src/client.rs"
+    use async_trait::async_trait;
+    use toolkit_security::SecurityContext;
+    use toolkit_canonical_errors::CanonicalError;
+
+    use crate::models::Greeting;
+
+    pub type GreeterError = CanonicalError;
+
+    /// Object-safe client registered in `ClientHub` as `Arc<dyn GreeterClientV1>`.
+    #[async_trait]
+    pub trait GreeterClientV1: Send + Sync {
+        async fn greet(&self, ctx: SecurityContext, name: String) -> Result<Greeting, GreeterError>;
+    }
+    ```
+
+    ```rust title="greeter-sdk/src/models.rs"
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    pub struct Greeting {
+        pub message: String,
+    }
+    ```
+
+2.  ### Implement the domain service
+
+    The domain holds your business logic, free of transport concerns. Domain types carry
+    the `#[domain_model]` attribute.
+
+    ```rust title="greeter/src/domain/service.rs"
+    use toolkit_macros::domain_model;
+    use toolkit_security::SecurityContext;
+    use greeter_sdk::{Greeting, GreeterError};
+
+    #[domain_model]
+    pub struct GreeterService;
+
+    impl GreeterService {
+        pub async fn greet(&self, _ctx: &SecurityContext, name: String)
+            -> Result<Greeting, GreeterError>
+        {
+            Ok(Greeting { message: format!("Hello, {name}!") })
+        }
+    }
+    ```
+
+3.  ### Write the local client adapter
+
+    The adapter implements the SDK trait by delegating to the domain service. This is the
+    **in-process backend** behind the facade.
+
+    ```rust title="greeter/src/domain/local_client.rs"
+    use std::sync::Arc;
+    use async_trait::async_trait;
+    use greeter_sdk::{GreeterClientV1, Greeting, GreeterError};
+    use toolkit_security::SecurityContext;
+
+    use super::service::GreeterService;
+
+    pub struct GreeterLocalClient {
+        service: Arc<GreeterService>,
+    }
+
+    impl GreeterLocalClient {
+        pub fn new(service: Arc<GreeterService>) -> Self { Self { service } }
+    }
+
+    #[async_trait]
+    impl GreeterClientV1 for GreeterLocalClient {
+        async fn greet(&self, ctx: SecurityContext, name: String)
+            -> Result<Greeting, GreeterError>
+        {
+            self.service.greet(&ctx, name).await
+        }
+    }
+    ```
+
+4.  ### Register the REST endpoint
+
+    Routes are declared with `OperationBuilder`: one fluent declaration produces the route,
+    its auth posture, response schema, error responses, and the OpenAPI entry.
+
+    ```rust title="greeter/src/api/rest/routes.rs"
+    use axum::Router;
+    use toolkit::api::OpenApiRegistry;
+    use toolkit::api::operation_builder::OperationBuilder;
+
+    pub fn register_routes(router: Router, openapi: &dyn OpenApiRegistry) -> Router {
+        OperationBuilder::get("/greeter/v1/greeting")
+            .operation_id("greeter.greet")
+            .summary("Return a greeting")
+            .tag("Greeter")
+            .authenticated()
+            .query_param("name", true, "Name to greet")
+            .handler(handlers::greet)
+            .json_response_with_schema::<dto::GreetingDto>(
+                openapi, http::StatusCode::OK, "A greeting",
+            )
+            .error_400(openapi)
+            .error_401(openapi)
+            .error_500(openapi)
+            .register(router, openapi)
+    }
+    ```
+
+    The handler pulls the `SecurityContext` and the service from request extensions and
+    returns a typed response (see `users-info` for the full handler/DTO conventions).
+
+5.  ### Declare the gear and wire it up
+
+    The `#[toolkit::gear]` attribute declares the gear's name, dependencies, and
+    capabilities. In `init` you build your service and **register it in `ClientHub`** under
+    the SDK trait. The `rest` capability is satisfied by `RestApiCapability`.
+
+    ```rust title="greeter/src/gear.rs"
+    use std::sync::{Arc, OnceLock};
+    use async_trait::async_trait;
+    use toolkit::api::OpenApiRegistry;
+    use toolkit::{Gear, GearCtx, RestApiCapability};
+    use greeter_sdk::GreeterClientV1;
+
+    use crate::api::rest::routes;
+    use crate::domain::local_client::GreeterLocalClient;
+    use crate::domain::service::GreeterService;
+
+    #[toolkit::gear(name = "greeter", capabilities = [rest])]
+    #[derive(Default)]
+    pub struct Greeter {
+        service: OnceLock<Arc<GreeterService>>,
+    }
+
+    #[async_trait]
+    impl Gear for Greeter {
+        async fn init(&self, ctx: &GearCtx) -> anyhow::Result<()> {
+            let service = Arc::new(GreeterService);
+            self.service
+                .set(service.clone())
+                .map_err(|_| anyhow::anyhow!("already initialized"))?;
+
+            // Expose the gear to other gears under its SDK trait.
+            let local = GreeterLocalClient::new(service);
+            ctx.client_hub().register::<dyn GreeterClientV1>(Arc::new(local));
+            Ok(())
+        }
+    }
+
+    impl RestApiCapability for Greeter {
+        fn register_rest(
+            &self,
+            _ctx: &GearCtx,
+            router: axum::Router,
+            openapi: &dyn OpenApiRegistry,
+        ) -> anyhow::Result<axum::Router> {
+            Ok(routes::register_routes(router, openapi))
+        }
+    }
+    ```
+
+6.  ### Add the gear to the server and run
+
+    The server binary lists the gears it composes; the runtime discovers them, orders them
+    by dependency, and runs the shared lifecycle. Add `Greeter` to that list, then start the
+    server (see [Install & run](/get-started/)) and call it:
+
+    ```sh
+    curl -s "http://127.0.0.1:8087/cf/greeter/v1/greeting?name=Ada"
+    # {"message":"Hello, Ada!"}
+    ```
+
+</Steps>
+
+## Calling your gear from another gear
+
+Any other gear resolves yours through `ClientHub` — no HTTP, no wiring, just the trait:
+
+```rust
+let greeter = ctx.client_hub().get::<dyn GreeterClientV1>()?;
+let greeting = greeter.greet(ctx.clone(), "Ada".into()).await?;
+```
+
+If you later run `greeter` in its own process, the consumer code above is unchanged — only
+configuration decides whether `ClientHub` hands back the local adapter or a gRPC client.
+
+## Where to go next
+
+<CardGrid>
+  <LinkCard title="Add a database" href="/concepts/" description="Use SecureConn + #[derive(Scopable)] for automatic tenant-scoped persistence (see the users-info example)." />
+  <LinkCard title="Add authorization" href="/concepts/" description="Call the PolicyEnforcer to obtain an AccessScope before touching data." />
+  <LinkCard title="Go out-of-process" href="/architecture/" description="Expose the same SDK over gRPC, selected by configuration (see the calculator example)." />
+  <LinkCard title="Components & features" href="/reference/" description="Everything the toolkit and system gears give you for free." />
+</CardGrid>

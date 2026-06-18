@@ -1,19 +1,72 @@
 ---
-title: Getting Started
-description: Install Gears, run the example server, and build your first gear.
+title: Getting started
+description: Install the toolchain, run the example server, and verify it works.
+sidebar:
+  label: Install & run
+  order: 1
 ---
 
-Install the toolchain, run the example server, and build your first gear.
+This page gets the example server running so you have something to explore and call.
+When you're ready to write code, continue to [Build your first gear](/get-started/your-first-gear/).
 
-:::note[Phase 1 placeholder]
-Structural placeholder. Real content arrives in Phase 4, sourced from
-`QUICKSTART_GUIDE.md` plus a new end-to-end "your first gear" tutorial.
-:::
+## Prerequisites
 
-Planned pages:
+- A recent **stable Rust toolchain** (`rustup` + `cargo`).
+- The Gears framework repository checked out locally (it contains the toolkit, the system
+  gears, and the example server).
+- Optional: build with `--features fips` to route TLS through validated crypto providers.
 
-- Installation
-- Quickstart
-- Your first gear
-- Running locally
-- Testing locally
+## Run the example server
+
+From the repository root, start the server with the example gears:
+
+```sh
+# Runs the server with example gears (tenant-resolver, users-info)
+make example
+
+# …or a minimal server with no example gears
+make quickstart
+```
+
+The server listens on `http://127.0.0.1:8087`. The quickstart configuration mounts the
+API gateway under the `/cf` prefix (set via `gears.api-gateway.config.prefix_path` in
+`config/quickstart.yaml`).
+
+## Verify it works
+
+Check health:
+
+```sh
+curl -s http://127.0.0.1:8087/health
+# {"status":"healthy","timestamp":"..."}
+```
+
+Open the interactive API docs in a browser:
+
+```
+http://127.0.0.1:8087/cf/docs
+```
+
+Fetch the generated OpenAPI document:
+
+```sh
+curl -s http://127.0.0.1:8087/cf/openapi.json > openapi.json
+```
+
+Call an example endpoint (the `users-info` gear, mounted under `/cf`):
+
+```sh
+curl -s "http://127.0.0.1:8087/cf/users-info/v1/users" | python3 -m json.tool
+```
+
+## Stop the server
+
+```sh
+pkill -f cf-gears-server
+```
+
+## Next
+
+- [Build your first gear](/get-started/your-first-gear/) — write an SDK, a domain service,
+  and a REST endpoint, and wire it into the runtime.
+- [Core concepts](/concepts/) — the mental model behind what you just ran.
