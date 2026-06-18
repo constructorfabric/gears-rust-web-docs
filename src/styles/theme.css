@@ -1,0 +1,270 @@
+/*
+ * Gears theme — aligned with the Constructor brand (constructor.com).
+ * Brand tokens: primary blue #0057b8, near-black text #010101, cool light
+ * surfaces (#f0f3f7 / #e3ecfa), coral secondary (#f4795a), pill buttons,
+ * flat (no shadows). Body type Inter (free analog of the corporate "Saans"),
+ * monospace JetBrains Mono (as used on constructor.com).
+ *
+ * The industrial structure (gear-mesh hero, blueprint grid) is kept; only the
+ * brand tokens are swapped. Dark mode is derived for readability.
+ */
+
+/* ---------------------------------------------------------------- *
+ * Dark mode (derived from the brand for docs readability)
+ * ---------------------------------------------------------------- */
+:root {
+  /* Accent ramp (blue) */
+  --sl-color-accent-low: #122b44;
+  --sl-color-accent: #2f6aa5;
+  --sl-color-accent-high: #7cc1ff;
+
+  /* Neutral ramp (cool graphite) */
+  --sl-color-white: #f3f5f7;
+  --sl-color-gray-1: #e6e9ec;
+  --sl-color-gray-2: #bfc5cd;
+  --sl-color-gray-3: #98a0ab;
+  --sl-color-gray-4: #69727e;
+  --sl-color-gray-5: #394049;
+  --sl-color-gray-6: #222932;
+  --sl-color-black: #0f1217;
+
+  /* Surfaces & rules */
+  --sl-color-bg: #0f1217;
+  --sl-color-bg-nav: #12151b;
+  --sl-color-bg-sidebar: #12151b;
+  --sl-color-hairline: #262d37;
+  --sl-color-hairline-light: #1d232c;
+  --sl-color-hairline-shade: #161b22;
+  --sl-color-text-accent: #7cc1ff;
+  --sl-color-bg-inline-code: #20262f;
+
+  /* Gears component tokens */
+  --gears-accent: #4f9fe0;
+  --gears-accent-strong: #7cc1ff;
+  --gears-steel: #f4795a; /* coral secondary (Constructor) */
+  --gears-surface: #161a20;
+  --gears-surface-raised: #1d232b;
+  --gears-hairline: #262d37;
+  --gears-text: #e6e9ec;
+  --gears-text-muted: #98a0ab;
+  --gears-grid-line: rgba(79, 159, 224, 0.07);
+  --gears-success: #5cb98a;
+  --gears-warning: #e0a85a;
+  --gears-danger: #e2786a;
+
+  /* Shape */
+  --gears-radius-card: 16px;
+  --gears-radius-pill: 99px;
+
+  /* Code surfaces — intentionally dark in BOTH site modes (matching the
+     always-dark Expressive Code blocks); not redefined for light mode.
+     Keep in sync with the expressiveCode styleOverrides in astro.config.mjs. */
+  --gears-code-bg: #1a2029;
+  --gears-code-bar: #12161c;
+  --gears-code-border: #2d3a47;
+  --gears-code-text: #e6e9ec;
+
+  /* Typography */
+  --sl-font: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --sl-font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+  --gears-font-display: var(--sl-font);
+}
+
+/* ---------------------------------------------------------------- *
+ * Light mode (the brand's native mode: white pages, cool tints, blue)
+ * ---------------------------------------------------------------- */
+:root[data-theme='light'] {
+  --sl-color-accent-low: #e3ecfa;
+  --sl-color-accent: #0057b8;
+  --sl-color-accent-high: #003e82;
+
+  --sl-color-white: #010101;
+  --sl-color-gray-1: #16191d;
+  --sl-color-gray-2: #3a414b;
+  --sl-color-gray-3: #5a6270;
+  --sl-color-gray-4: #878f9b;
+  --sl-color-gray-5: #c4ccd6;
+  --sl-color-gray-6: #e6ebf1;
+  --sl-color-black: #ffffff;
+
+  --sl-color-bg: #ffffff;
+  --sl-color-bg-nav: #ffffff;
+  --sl-color-bg-sidebar: #f7f9fc;
+  --sl-color-hairline: #e0e6ee;
+  --sl-color-hairline-light: #eef1f6;
+  --sl-color-hairline-shade: #f0f3f7;
+  --sl-color-text-accent: #0057b8;
+  --sl-color-bg-inline-code: #f0f3f7;
+
+  --gears-accent: #0057b8;
+  --gears-accent-strong: #003e82;
+  --gears-steel: #f4795a; /* coral secondary (Constructor) */
+  --gears-surface: #ffffff;
+  --gears-surface-raised: #f0f3f7;
+  --gears-hairline: #e0e6ee;
+  --gears-text: #16191d;
+  --gears-text-muted: #5a6270;
+  --gears-grid-line: rgba(0, 87, 184, 0.08);
+  --gears-success: #2f7a52;
+  --gears-warning: #9a6c1e;
+  --gears-danger: #c9503a;
+}
+
+/* ---------------------------------------------------------------- *
+ * Typography
+ * ---------------------------------------------------------------- */
+:is(h1, h2, h3, h4, h5, h6),
+.site-title {
+  font-family: var(--gears-font-display);
+  font-weight: 600;
+  letter-spacing: -0.014em;
+}
+
+.site-title {
+  letter-spacing: 0.01em;
+  text-transform: lowercase;
+}
+
+/* Monospace "eyebrow" label utility */
+.gears-eyebrow {
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gears-accent);
+}
+
+/* ---------------------------------------------------------------- *
+ * Buttons — Constructor uses fully-rounded pills
+ * ---------------------------------------------------------------- */
+.sl-link-button {
+  border-radius: var(--gears-radius-pill);
+}
+
+/* ---------------------------------------------------------------- *
+ * Homepage hero — native Starlight hero with a blueprint backdrop
+ * ---------------------------------------------------------------- */
+.hero {
+  position: relative;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: -3rem -50vw;
+  background-image:
+    linear-gradient(var(--gears-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--gears-grid-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 75% 75% at 40% 45%, #000 30%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 75% at 40% 45%, #000 30%, transparent 78%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hero h1 {
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  line-height: 1.05;
+}
+
+.hero .tagline {
+  color: var(--gears-text-muted);
+}
+
+/* ---------------------------------------------------------------- *
+ * Cards — flat brand panels (no shadow), rounded, hairline rule
+ * ---------------------------------------------------------------- */
+.card {
+  background: var(--gears-surface);
+  border: 1px solid var(--gears-hairline);
+  border-radius: var(--gears-radius-card);
+  box-shadow: none;
+  transition: border-color 0.15s ease;
+}
+
+.card:hover {
+  border-color: var(--gears-accent);
+}
+
+.card .icon {
+  color: var(--gears-accent);
+  border-color: var(--gears-hairline);
+  background: color-mix(in srgb, var(--gears-accent) 10%, transparent);
+}
+
+.sl-markdown-content a:not(:where(.not-content *)) {
+  text-underline-offset: 0.2em;
+}
+
+/* ---------------------------------------------------------------- *
+ * ConceptDiagram — theme swap between light/dark artwork
+ * ---------------------------------------------------------------- */
+:root[data-theme='dark'] .gears-diagram__img--light {
+  display: none;
+}
+:root[data-theme='light'] .gears-diagram__img--dark {
+  display: none;
+}
+
+/* ---------------------------------------------------------------- *
+ * Asides / callouts — on-brand semantic palette
+ *   note → blue · tip → green · caution → amber · danger → red
+ * Starlight's asides read --sl-color-{type} / -low / -high. (Default `tip`
+ * is purple; we recolor it green to match the brand.)
+ * ---------------------------------------------------------------- */
+:root {
+  --sl-color-blue: #4f9fe0;
+  --sl-color-blue-low: #16273a;
+  --sl-color-blue-high: #a9d2f7;
+  --sl-color-green: #56b98a;
+  --sl-color-green-low: #13301f;
+  --sl-color-green-high: #9adfb6;
+  --sl-color-orange: #e0a85a;
+  --sl-color-orange-low: #352716;
+  --sl-color-orange-high: #f1ca8c;
+  --sl-color-red: #e2786a;
+  --sl-color-red-low: #371d19;
+  --sl-color-red-high: #f4a89d;
+}
+
+:root[data-theme='light'] {
+  --sl-color-blue: #0057b8;
+  --sl-color-blue-low: #e3ecfa;
+  --sl-color-blue-high: #003e82;
+  --sl-color-green: #2f8a5a;
+  --sl-color-green-low: #e0f2e8;
+  --sl-color-green-high: #1c5638;
+  --sl-color-orange: #b5781e;
+  --sl-color-orange-low: #f7edd9;
+  --sl-color-orange-high: #774d12;
+  --sl-color-red: #c9503a;
+  --sl-color-red-low: #f8e3de;
+  --sl-color-red-high: #8c3122;
+}
+
+/* Recolor `tip` from Starlight's default purple to brand green. */
+.starlight-aside--tip {
+  --sl-color-asides-text-accent: var(--sl-color-green-high);
+  --sl-color-asides-border: var(--sl-color-green);
+  background-color: var(--sl-color-green-low);
+}
+
+/* Round the open (right) side to match our panels; keep the accent bar crisp. */
+.starlight-aside {
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+/* ---------------------------------------------------------------- *
+ * Reduced motion
+ * ---------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .sl-link-button {
+    transition: none;
+  }
+}

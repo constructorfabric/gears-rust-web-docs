@@ -1,0 +1,69 @@
+---
+/**
+ * ConceptDiagram — figure wrapper for hand-authored SVG/PNG diagrams.
+ * Supports separate light/dark artwork (blueprint style) with an automatic
+ * theme swap. If only `src` is given it is shown in both modes.
+ * Usage:
+ *   <ConceptDiagram src="/diagrams/runtime.svg"
+ *                   srcDark="/diagrams/runtime-dark.svg"
+ *                   alt="Runtime lifecycle phases"
+ *                   caption="Ordered lifecycle phases" />
+ */
+interface Props {
+  src: string;
+  srcDark?: string;
+  alt: string;
+  caption?: string;
+}
+const { src, srcDark, alt, caption } = Astro.props;
+const hasVariants = Boolean(srcDark);
+---
+
+<figure class="gears-diagram not-content">
+  {
+    hasVariants ? (
+      <>
+        <img class="gears-diagram__img gears-diagram__img--light" src={src} alt={alt} loading="lazy" />
+        <img class="gears-diagram__img gears-diagram__img--dark" src={srcDark} alt={alt} loading="lazy" />
+      </>
+    ) : (
+      <img class="gears-diagram__img" src={src} alt={alt} loading="lazy" />
+    )
+  }
+  {(caption || Astro.slots.has('default')) && (
+    <figcaption class="gears-diagram__caption">
+      {caption}
+      <slot />
+    </figcaption>
+  )}
+</figure>
+
+<style>
+  .gears-diagram {
+    margin: 1.75rem 0;
+    padding: 1.25rem;
+    border: 1px solid var(--gears-hairline);
+    border-radius: 0.5rem;
+    background: var(--gears-surface);
+    background-image:
+      linear-gradient(var(--gears-grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--gears-grid-line) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .gears-diagram__img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .gears-diagram__caption {
+    margin-top: 0.85rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--gears-hairline);
+    font-family: var(--sl-font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.03em;
+    color: var(--gears-text-muted);
+    text-align: center;
+  }
+  /* The light/dark artwork swap lives in theme.css (shared, deduplicated). */
+</style>

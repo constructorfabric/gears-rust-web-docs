@@ -1,0 +1,8 @@
+# esbuild (Astro's bundler) and sharp (image optimization) ship native
+# binaries via postinstall scripts. pnpm 11 blocks build scripts by default;
+# both are first-party Astro dependencies, so we allow them explicitly.
+allowBuilds:
+  esbuild: true
+  sharp: true
+minimumReleaseAgeExclude:
+  - astro@6.4.8

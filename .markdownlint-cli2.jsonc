@@ -1,0 +1,19 @@
+{
+  // Markdown linting for Starlight content. We lint .md files only; .mdx files
+  // contain JSX/imports that markdownlint cannot parse meaningfully.
+  "globs": ["src/content/docs/**/*.md"],
+  "ignores": ["**/node_modules/**", "dist/**", ".astro/**"],
+  "config": {
+    "default": true,
+    // Prose wraps freely; line length is not enforced.
+    "MD013": false,
+    // Pages set their <h1> via Starlight frontmatter `title`, not a body heading.
+    "MD041": false,
+    // Allow occasional inline HTML in prose.
+    "MD033": false,
+    // The same heading text may recur under different sections.
+    "MD024": { "siblings_only": true },
+    // Starlight asides (:::note) and tables are fine.
+    "MD046": { "style": "fenced" }
+  }
+}

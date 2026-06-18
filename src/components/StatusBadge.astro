@@ -1,0 +1,67 @@
+---
+/**
+ * StatusBadge — small pill for feature/gear maturity and implementation phase.
+ * Statuses:     stable | beta | experimental | deprecated
+ * Gear phases:  p1 … p5
+ * Usage: <StatusBadge status="beta" /> or <StatusBadge phase="p2" />
+ */
+interface Props {
+  status?: 'stable' | 'beta' | 'experimental' | 'deprecated';
+  phase?: 'p1' | 'p2' | 'p3' | 'p4' | 'p5';
+  label?: string;
+}
+const { status, phase, label } = Astro.props;
+const tone = status
+  ? status === 'stable'
+    ? 'ok'
+    : status === 'beta'
+      ? 'info'
+      : status === 'deprecated'
+        ? 'danger'
+        : 'muted'
+  : 'phase';
+const text = label ?? status ?? phase ?? '';
+---
+
+<span class:list={['gears-badge', `gears-badge--${tone}`]} data-status={status} data-phase={phase}>
+  {text}
+</span>
+
+<style>
+  .gears-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    font-family: var(--sl-font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    line-height: 1;
+    padding: 0.3em 0.6em;
+    border-radius: 0.25rem;
+    border: 1px solid var(--gears-hairline);
+    color: var(--gears-text-muted);
+    background: var(--gears-surface-raised);
+  }
+  .gears-badge--ok {
+    color: var(--gears-success);
+    border-color: color-mix(in srgb, var(--gears-success) 45%, var(--gears-hairline));
+    background: color-mix(in srgb, var(--gears-success) 12%, transparent);
+  }
+  .gears-badge--info {
+    color: var(--gears-steel);
+    border-color: color-mix(in srgb, var(--gears-steel) 45%, var(--gears-hairline));
+    background: color-mix(in srgb, var(--gears-steel) 12%, transparent);
+  }
+  .gears-badge--danger {
+    color: var(--gears-danger);
+    border-color: color-mix(in srgb, var(--gears-danger) 45%, var(--gears-hairline));
+    background: color-mix(in srgb, var(--gears-danger) 12%, transparent);
+  }
+  .gears-badge--phase {
+    color: var(--gears-accent);
+    border-color: color-mix(in srgb, var(--gears-accent) 45%, var(--gears-hairline));
+    background: color-mix(in srgb, var(--gears-accent) 12%, transparent);
+  }
+</style>
