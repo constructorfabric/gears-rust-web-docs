@@ -6,7 +6,7 @@
   "description": "Documentation portal for the Gears Rust framework",
   "packageManager": "pnpm@11.8.0",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.13.0"
   },
   "scripts": {
     "dev": "astro dev",

@@ -12,7 +12,7 @@ authored in Markdown/MDX, and shipped as a static site.
 
 ## Prerequisites
 
-- **Node.js** 20 LTS or newer
+- **Node.js** 22.13 or newer (required by pnpm 11)
 - **pnpm** 11+ — enable it with Corepack (bundled with Node):
 
   ```sh
