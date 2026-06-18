@@ -1,119 +1,123 @@
 /*
- * Gears theme — industrial / mechanical identity.
- * Graphite surfaces, warm brass accent, steel secondary, hairline rules.
- * Deliberately not corporate-blue (Microsoft) and not rust-orange (rust-lang).
+ * Gears theme — aligned with the Constructor brand (constructor.com).
+ * Brand tokens: primary blue #0057b8, near-black text #010101, cool light
+ * surfaces (#f0f3f7 / #e3ecfa), coral secondary (#f4795a), pill buttons,
+ * flat (no shadows). Body type Inter (free analog of the corporate "Saans"),
+ * monospace JetBrains Mono (as used on constructor.com).
  *
- * Dark mode is the primary identity (`:root`); light mode overrides below.
- * Tokens prefixed `--gears-*` are consumed by our own components; the
- * `--sl-*` tokens drive Starlight's chrome.
+ * The industrial structure (gear-mesh hero, blueprint grid) is kept; only the
+ * brand tokens are swapped. Dark mode is derived for readability.
  */
 
 /* ---------------------------------------------------------------- *
- * Dark mode (primary)
+ * Dark mode (derived from the brand for docs readability)
  * ---------------------------------------------------------------- */
 :root {
-  /* Accent ramp (brass / amber) */
-  --sl-color-accent-low: #3a2c12;
-  --sl-color-accent: #a9772b;
-  --sl-color-accent-high: #e1b366;
+  /* Accent ramp (blue) */
+  --sl-color-accent-low: #122b44;
+  --sl-color-accent: #2f6aa5;
+  --sl-color-accent-high: #7cc1ff;
 
-  /* Neutral ramp (graphite) */
-  --sl-color-white: #f2f3f4;
-  --sl-color-gray-1: #e6e8ea;
-  --sl-color-gray-2: #c0c4c9;
-  --sl-color-gray-3: #9aa1a8;
-  --sl-color-gray-4: #6c727a;
-  --sl-color-gray-5: #3b4046;
-  --sl-color-gray-6: #23262b;
-  --sl-color-black: #15171a;
+  /* Neutral ramp (cool graphite) */
+  --sl-color-white: #f3f5f7;
+  --sl-color-gray-1: #e6e9ec;
+  --sl-color-gray-2: #bfc5cd;
+  --sl-color-gray-3: #98a0ab;
+  --sl-color-gray-4: #69727e;
+  --sl-color-gray-5: #394049;
+  --sl-color-gray-6: #222932;
+  --sl-color-black: #0f1217;
 
   /* Surfaces & rules */
-  --sl-color-bg: #15171a;
-  --sl-color-bg-nav: #16181c;
-  --sl-color-bg-sidebar: #16181c;
-  --sl-color-hairline: #2a2e34;
-  --sl-color-hairline-light: #23262b;
-  --sl-color-hairline-shade: #1c1f23;
-  --sl-color-text-accent: #e1b366;
-  --sl-color-bg-inline-code: #23262b;
+  --sl-color-bg: #0f1217;
+  --sl-color-bg-nav: #12151b;
+  --sl-color-bg-sidebar: #12151b;
+  --sl-color-hairline: #262d37;
+  --sl-color-hairline-light: #1d232c;
+  --sl-color-hairline-shade: #161b22;
+  --sl-color-text-accent: #7cc1ff;
+  --sl-color-bg-inline-code: #20262f;
 
   /* Gears component tokens */
-  --gears-accent: #d8a657;
-  --gears-accent-strong: #e1b366;
-  --gears-steel: #7fa6a1;
-  --gears-surface: #1d2024;
-  --gears-surface-raised: #23262b;
-  --gears-hairline: #2a2e34;
-  --gears-text: #e6e8ea;
-  --gears-text-muted: #9aa1a8;
-  --gears-grid-line: rgba(216, 166, 87, 0.07);
-  --gears-success: #7fae86;
-  --gears-warning: #d8a657;
-  --gears-danger: #cf8474;
+  --gears-accent: #4f9fe0;
+  --gears-accent-strong: #7cc1ff;
+  --gears-steel: #f4795a; /* coral secondary (Constructor) */
+  --gears-surface: #161a20;
+  --gears-surface-raised: #1d232b;
+  --gears-hairline: #262d37;
+  --gears-text: #e6e9ec;
+  --gears-text-muted: #98a0ab;
+  --gears-grid-line: rgba(79, 159, 224, 0.07);
+  --gears-success: #5cb98a;
+  --gears-warning: #e0a85a;
+  --gears-danger: #e2786a;
+
+  /* Shape */
+  --gears-radius-card: 16px;
+  --gears-radius-pill: 99px;
 
   /* Typography */
   --sl-font: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --sl-font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
-  --gears-font-display: 'Space Grotesk Variable', var(--sl-font);
+  --gears-font-display: var(--sl-font);
 }
 
 /* ---------------------------------------------------------------- *
- * Light mode (warm paper-gray, never pure white background)
+ * Light mode (the brand's native mode: white pages, cool tints, blue)
  * ---------------------------------------------------------------- */
 :root[data-theme='light'] {
-  --sl-color-accent-low: #efe4cf;
-  /* darkened brass so white text on the primary button clears WCAG AA (4.5:1) */
-  --sl-color-accent: #9a6c1e;
-  --sl-color-accent-high: #6b4a16;
+  --sl-color-accent-low: #e3ecfa;
+  --sl-color-accent: #0057b8;
+  --sl-color-accent-high: #003e82;
 
-  --sl-color-white: #16181a;
-  --sl-color-gray-1: #1b1d20;
-  --sl-color-gray-2: #33373c;
-  --sl-color-gray-3: #5b6168;
-  --sl-color-gray-4: #888d94;
-  --sl-color-gray-5: #c2c4c2;
-  --sl-color-gray-6: #e4e3dd;
-  --sl-color-black: #f6f5f2;
+  --sl-color-white: #010101;
+  --sl-color-gray-1: #16191d;
+  --sl-color-gray-2: #3a414b;
+  --sl-color-gray-3: #5a6270;
+  --sl-color-gray-4: #878f9b;
+  --sl-color-gray-5: #c4ccd6;
+  --sl-color-gray-6: #e6ebf1;
+  --sl-color-black: #ffffff;
 
-  --sl-color-bg: #f6f5f2;
-  --sl-color-bg-nav: #fbfbf9;
-  --sl-color-bg-sidebar: #fbfbf9;
-  --sl-color-hairline: #dcdad2;
-  --sl-color-hairline-light: #e6e4dc;
-  --sl-color-hairline-shade: #ecebe4;
-  --sl-color-text-accent: #8a5f1f;
-  --sl-color-bg-inline-code: #ecebe4;
+  --sl-color-bg: #ffffff;
+  --sl-color-bg-nav: #ffffff;
+  --sl-color-bg-sidebar: #f7f9fc;
+  --sl-color-hairline: #e0e6ee;
+  --sl-color-hairline-light: #eef1f6;
+  --sl-color-hairline-shade: #f0f3f7;
+  --sl-color-text-accent: #0057b8;
+  --sl-color-bg-inline-code: #f0f3f7;
 
-  --gears-accent: #b07d2e;
-  --gears-accent-strong: #8a5f1f;
-  --gears-steel: #3f6f69;
+  --gears-accent: #0057b8;
+  --gears-accent-strong: #003e82;
+  --gears-steel: #f4795a; /* coral secondary (Constructor) */
   --gears-surface: #ffffff;
-  --gears-surface-raised: #ffffff;
-  --gears-hairline: #dcdad2;
-  --gears-text: #1b1d20;
-  --gears-text-muted: #5b6168;
-  --gears-grid-line: rgba(176, 125, 46, 0.09);
-  --gears-success: #3f7a52;
+  --gears-surface-raised: #f0f3f7;
+  --gears-hairline: #e0e6ee;
+  --gears-text: #16191d;
+  --gears-text-muted: #5a6270;
+  --gears-grid-line: rgba(0, 87, 184, 0.08);
+  --gears-success: #2f7a52;
   --gears-warning: #9a6c1e;
-  --gears-danger: #b15a47;
+  --gears-danger: #c9503a;
 }
 
 /* ---------------------------------------------------------------- *
- * Typography — mechanical display face for headings & site title
+ * Typography
  * ---------------------------------------------------------------- */
 :is(h1, h2, h3, h4, h5, h6),
 .site-title {
   font-family: var(--gears-font-display);
   font-weight: 600;
-  letter-spacing: -0.012em;
+  letter-spacing: -0.014em;
 }
 
 .site-title {
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   text-transform: lowercase;
 }
 
-/* Monospace "eyebrow" label utility for that systems-tooling feel */
+/* Monospace "eyebrow" label utility */
 .gears-eyebrow {
   font-family: var(--sl-font-mono);
   font-size: var(--sl-text-xs);
@@ -123,7 +127,14 @@
 }
 
 /* ---------------------------------------------------------------- *
- * Homepage hero — Starlight's native hero with a blueprint backdrop
+ * Buttons — Constructor uses fully-rounded pills
+ * ---------------------------------------------------------------- */
+.sl-link-button {
+  border-radius: var(--gears-radius-pill);
+}
+
+/* ---------------------------------------------------------------- *
+ * Homepage hero — native Starlight hero with a blueprint backdrop
  * ---------------------------------------------------------------- */
 .hero {
   position: relative;
@@ -158,21 +169,18 @@
 }
 
 /* ---------------------------------------------------------------- *
- * Cards — hairline rule + brass top edge on hover (industrial panel)
+ * Cards — flat brand panels (no shadow), rounded, hairline rule
  * ---------------------------------------------------------------- */
 .card {
   background: var(--gears-surface);
   border: 1px solid var(--gears-hairline);
-  border-radius: 0.4rem;
-  border-top: 2px solid var(--gears-hairline);
-  transition:
-    border-top-color 0.15s ease,
-    transform 0.15s ease;
+  border-radius: var(--gears-radius-card);
+  box-shadow: none;
+  transition: border-color 0.15s ease;
 }
 
 .card:hover {
-  border-top-color: var(--gears-accent);
-  transform: translateY(-2px);
+  border-color: var(--gears-accent);
 }
 
 .card .icon {
@@ -181,7 +189,6 @@
   background: color-mix(in srgb, var(--gears-accent) 10%, transparent);
 }
 
-/* Tighten the link underline accent to brass */
 .sl-markdown-content a:not(:where(.not-content *)) {
   text-underline-offset: 0.2em;
 }

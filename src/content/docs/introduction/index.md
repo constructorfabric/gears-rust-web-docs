@@ -6,8 +6,9 @@ sidebar:
   order: 1
 ---
 
-**Gears is a Rust framework for building backend platforms out of composable,
-secure-by-default components called _gears_.** You write each capability once as a
+**Gears** (full name **Constructor Fabric Gears**) **is a Rust framework for building
+backend platforms out of composable, secure-by-default components called _gears_.**
+You write each capability once as a
 self-contained gear; the runtime discovers it, wires it to its dependencies, and
 runs it — in a single process on the edge, across processes over gRPC, or as
 containers in Kubernetes — from the same codebase.

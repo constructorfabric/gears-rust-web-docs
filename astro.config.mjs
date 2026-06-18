@@ -10,7 +10,7 @@ export default defineConfig({
     starlight({
       title: 'Gears',
       description:
-        'Documentation for Gears — a Rust runtime for composable, secure-by-default platform components.',
+        'Documentation for Constructor Fabric Gears — a Rust runtime for composable, secure-by-default platform components.',
       logo: {
         src: './src/assets/gears-logo.svg',
         alt: 'Gears',
@@ -18,7 +18,6 @@ export default defineConfig({
       // Self-hosted variable fonts + the Gears theme tokens.
       customCss: [
         '@fontsource-variable/inter',
-        '@fontsource-variable/space-grotesk',
         '@fontsource-variable/jetbrains-mono',
         './src/styles/theme.css',
       ],
