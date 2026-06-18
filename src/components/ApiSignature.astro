@@ -1,0 +1,66 @@
+---
+/**
+ * ApiSignature — a labelled signature block for Reference pages (Phase 6).
+ * Renders a kind tag (trait / fn / struct / enum / type) beside a monospace
+ * signature. Used to give the Reference section a consistent API surface look.
+ * Usage:
+ *   <ApiSignature kind="trait" name="UsersInfoClientV1">
+ *     async fn get(&self, id: Uuid) -> Result&lt;User, CanonicalError&gt;
+ *   </ApiSignature>
+ */
+interface Props {
+  kind?: 'trait' | 'fn' | 'struct' | 'enum' | 'type' | 'macro';
+  name?: string;
+}
+const { kind, name } = Astro.props;
+---
+
+<div class="gears-sig not-content">
+  <div class="gears-sig__head">
+    {kind && <span class="gears-sig__kind">{kind}</span>}
+    {name && <span class="gears-sig__name">{name}</span>}
+  </div>
+  <pre class="gears-sig__body"><code><slot /></code></pre>
+</div>
+
+<style>
+  .gears-sig {
+    margin: 1.25rem 0;
+    border: 1px solid var(--gears-hairline);
+    border-left: 3px solid var(--gears-accent);
+    border-radius: 0.35rem;
+    background: var(--gears-surface);
+    overflow: hidden;
+  }
+  .gears-sig__head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0.85rem;
+    border-bottom: 1px solid var(--gears-hairline);
+  }
+  .gears-sig__kind {
+    font-family: var(--sl-font-mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gears-accent);
+  }
+  .gears-sig__name {
+    font-family: var(--sl-font-mono);
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--gears-text);
+  }
+  .gears-sig__body {
+    margin: 0;
+    padding: 0.75rem 0.85rem;
+    overflow-x: auto;
+    font-family: var(--sl-font-mono);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    color: var(--gears-text);
+    background: transparent;
+  }
+</style>

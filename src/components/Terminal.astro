@@ -1,0 +1,75 @@
+---
+/**
+ * Terminal — a framed shell window for narrated command sequences where
+ * Expressive Code's own terminal frame isn't a fit (e.g. annotated output).
+ * For plain runnable commands, prefer a fenced ```sh block (Expressive Code).
+ * Usage:
+ *   <Terminal title="build">
+ *   ```sh
+ *   pnpm build
+ *   ```
+ *   </Terminal>
+ */
+interface Props {
+  title?: string;
+}
+const { title = 'shell' } = Astro.props;
+---
+
+<div class="gears-terminal not-content">
+  <div class="gears-terminal__bar">
+    <span class="gears-terminal__dots" aria-hidden="true">
+      <i></i><i></i><i></i>
+    </span>
+    <span class="gears-terminal__title">{title}</span>
+  </div>
+  <div class="gears-terminal__body">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .gears-terminal {
+    border: 1px solid var(--gears-hairline);
+    border-radius: 0.4rem;
+    overflow: hidden;
+    background: #1a1d21;
+  }
+  .gears-terminal__bar {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.75rem;
+    background: #15171a;
+    border-bottom: 1px solid var(--gears-hairline);
+  }
+  .gears-terminal__dots {
+    display: inline-flex;
+    gap: 0.3rem;
+  }
+  .gears-terminal__dots i {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    background: #2a2e34;
+  }
+  .gears-terminal__dots i:first-child {
+    background: var(--gears-accent);
+  }
+  .gears-terminal__title {
+    font-family: var(--sl-font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: var(--gears-text-muted);
+  }
+  .gears-terminal__body {
+    padding: 0.25rem 0.75rem;
+    font-family: var(--sl-font-mono);
+    font-size: 0.85rem;
+    color: #e6e8ea;
+  }
+  /* let nested Expressive Code blocks sit flush inside the frame */
+  .gears-terminal__body :global(.expressive-code) {
+    margin: 0.6rem 0;
+  }
+</style>

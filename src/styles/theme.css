@@ -1,0 +1,187 @@
+/*
+ * Gears theme — industrial / mechanical identity.
+ * Graphite surfaces, warm brass accent, steel secondary, hairline rules.
+ * Deliberately not corporate-blue (Microsoft) and not rust-orange (rust-lang).
+ *
+ * Dark mode is the primary identity (`:root`); light mode overrides below.
+ * Tokens prefixed `--gears-*` are consumed by our own components; the
+ * `--sl-*` tokens drive Starlight's chrome.
+ */
+
+/* ---------------------------------------------------------------- *
+ * Dark mode (primary)
+ * ---------------------------------------------------------------- */
+:root {
+  /* Accent ramp (brass / amber) */
+  --sl-color-accent-low: #3a2c12;
+  --sl-color-accent: #a9772b;
+  --sl-color-accent-high: #e1b366;
+
+  /* Neutral ramp (graphite) */
+  --sl-color-white: #f2f3f4;
+  --sl-color-gray-1: #e6e8ea;
+  --sl-color-gray-2: #c0c4c9;
+  --sl-color-gray-3: #9aa1a8;
+  --sl-color-gray-4: #6c727a;
+  --sl-color-gray-5: #3b4046;
+  --sl-color-gray-6: #23262b;
+  --sl-color-black: #15171a;
+
+  /* Surfaces & rules */
+  --sl-color-bg: #15171a;
+  --sl-color-bg-nav: #16181c;
+  --sl-color-bg-sidebar: #16181c;
+  --sl-color-hairline: #2a2e34;
+  --sl-color-hairline-light: #23262b;
+  --sl-color-hairline-shade: #1c1f23;
+  --sl-color-text-accent: #e1b366;
+  --sl-color-bg-inline-code: #23262b;
+
+  /* Gears component tokens */
+  --gears-accent: #d8a657;
+  --gears-accent-strong: #e1b366;
+  --gears-steel: #7fa6a1;
+  --gears-surface: #1d2024;
+  --gears-surface-raised: #23262b;
+  --gears-hairline: #2a2e34;
+  --gears-text: #e6e8ea;
+  --gears-text-muted: #9aa1a8;
+  --gears-grid-line: rgba(216, 166, 87, 0.07);
+  --gears-success: #7fae86;
+  --gears-warning: #d8a657;
+  --gears-danger: #cf8474;
+
+  /* Typography */
+  --sl-font: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --sl-font-mono: 'JetBrains Mono Variable', ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+  --gears-font-display: 'Space Grotesk Variable', var(--sl-font);
+}
+
+/* ---------------------------------------------------------------- *
+ * Light mode (warm paper-gray, never pure white background)
+ * ---------------------------------------------------------------- */
+:root[data-theme='light'] {
+  --sl-color-accent-low: #efe4cf;
+  /* darkened brass so white text on the primary button clears WCAG AA (4.5:1) */
+  --sl-color-accent: #9a6c1e;
+  --sl-color-accent-high: #6b4a16;
+
+  --sl-color-white: #16181a;
+  --sl-color-gray-1: #1b1d20;
+  --sl-color-gray-2: #33373c;
+  --sl-color-gray-3: #5b6168;
+  --sl-color-gray-4: #888d94;
+  --sl-color-gray-5: #c2c4c2;
+  --sl-color-gray-6: #e4e3dd;
+  --sl-color-black: #f6f5f2;
+
+  --sl-color-bg: #f6f5f2;
+  --sl-color-bg-nav: #fbfbf9;
+  --sl-color-bg-sidebar: #fbfbf9;
+  --sl-color-hairline: #dcdad2;
+  --sl-color-hairline-light: #e6e4dc;
+  --sl-color-hairline-shade: #ecebe4;
+  --sl-color-text-accent: #8a5f1f;
+  --sl-color-bg-inline-code: #ecebe4;
+
+  --gears-accent: #b07d2e;
+  --gears-accent-strong: #8a5f1f;
+  --gears-steel: #3f6f69;
+  --gears-surface: #ffffff;
+  --gears-surface-raised: #ffffff;
+  --gears-hairline: #dcdad2;
+  --gears-text: #1b1d20;
+  --gears-text-muted: #5b6168;
+  --gears-grid-line: rgba(176, 125, 46, 0.09);
+  --gears-success: #3f7a52;
+  --gears-warning: #9a6c1e;
+  --gears-danger: #b15a47;
+}
+
+/* ---------------------------------------------------------------- *
+ * Typography — mechanical display face for headings & site title
+ * ---------------------------------------------------------------- */
+:is(h1, h2, h3, h4, h5, h6),
+.site-title {
+  font-family: var(--gears-font-display);
+  font-weight: 600;
+  letter-spacing: -0.012em;
+}
+
+.site-title {
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+}
+
+/* Monospace "eyebrow" label utility for that systems-tooling feel */
+.gears-eyebrow {
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-text-xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gears-accent);
+}
+
+/* ---------------------------------------------------------------- *
+ * Homepage hero — Starlight's native hero with a blueprint backdrop
+ * ---------------------------------------------------------------- */
+.hero {
+  position: relative;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: -3rem -50vw;
+  background-image:
+    linear-gradient(var(--gears-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--gears-grid-line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 75% 75% at 40% 45%, #000 30%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 75% at 40% 45%, #000 30%, transparent 78%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hero h1 {
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  line-height: 1.05;
+}
+
+.hero .tagline {
+  color: var(--gears-text-muted);
+}
+
+/* ---------------------------------------------------------------- *
+ * Cards — hairline rule + brass top edge on hover (industrial panel)
+ * ---------------------------------------------------------------- */
+.card {
+  background: var(--gears-surface);
+  border: 1px solid var(--gears-hairline);
+  border-radius: 0.4rem;
+  border-top: 2px solid var(--gears-hairline);
+  transition:
+    border-top-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.card:hover {
+  border-top-color: var(--gears-accent);
+  transform: translateY(-2px);
+}
+
+.card .icon {
+  color: var(--gears-accent);
+  border-color: var(--gears-hairline);
+  background: color-mix(in srgb, var(--gears-accent) 10%, transparent);
+}
+
+/* Tighten the link underline accent to brass */
+.sl-markdown-content a:not(:where(.not-content *)) {
+  text-underline-offset: 0.2em;
+}

@@ -11,6 +11,34 @@ export default defineConfig({
       title: 'Gears',
       description:
         'Documentation for Gears — a Rust runtime for composable, secure-by-default platform components.',
+      logo: {
+        src: './src/assets/gears-logo.svg',
+        alt: 'Gears',
+      },
+      // Self-hosted variable fonts + the Gears theme tokens.
+      customCss: [
+        '@fontsource-variable/inter',
+        '@fontsource-variable/space-grotesk',
+        '@fontsource-variable/jetbrains-mono',
+        './src/styles/theme.css',
+      ],
+      // Code blocks: a consistent graphite surface in both site modes, with a
+      // restrained brass accent on the active tab / frame chrome.
+      expressiveCode: {
+        themes: ['github-dark'],
+        styleOverrides: {
+          borderRadius: '0.3rem',
+          borderColor: '#2a2e34',
+          codeBackground: '#1a1d21',
+          frames: {
+            editorActiveTabIndicatorTopColor: '#d8a657',
+            editorActiveTabBackground: '#1d2024',
+            editorTabBarBackground: '#15171a',
+            terminalTitlebarBackground: '#15171a',
+            terminalBackground: '#1a1d21',
+          },
+        },
+      },
       // TODO(Phase 1): point at the real Gears source repository.
       social: [
         {
