@@ -6,6 +6,10 @@ import starlight from '@astrojs/starlight';
 export default defineConfig({
   // TODO(Phase 7): set the production URL once a deploy host is chosen.
   site: 'https://gears.dev',
+  // Emit all stylesheets as files (don't inline small ones). Avoids an
+  // Expressive Code asset-hash mismatch on pages whose code blocks are all
+  // plaintext, which otherwise produced a 404 link to an un-emitted CSS file.
+  build: { inlineStylesheets: 'never' },
   integrations: [
     starlight({
       title: 'Gears',

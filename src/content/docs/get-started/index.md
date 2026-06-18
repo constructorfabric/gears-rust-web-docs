@@ -16,6 +16,11 @@ When you're ready to write code, continue to [Build your first gear](/get-starte
   gears, and the example server).
 - Optional: build with `--features fips` to route TLS through validated crypto providers.
 
+:::caution[No published crate yet]
+The example server is built from the framework repository — there is no crate to
+`cargo install` at this stage. Clone the repo and run the commands below from its root.
+:::
+
 ## Run the example server
 
 From the repository root, start the server with the example gears:
@@ -31,6 +36,17 @@ make quickstart
 The server listens on `http://127.0.0.1:8087`. The quickstart configuration mounts the
 API gateway under the `/cf` prefix (set via `gears.api-gateway.config.prefix_path` in
 `config/quickstart.yaml`).
+
+:::tip[Which target should I run?]
+Use `make example` to explore real endpoints — it loads the `tenant-resolver` and
+`users-info` gears. Use `make quickstart` when you want the bare runtime with nothing
+mounted but the system gears.
+:::
+
+:::note[About the `/cf` prefix]
+Every path below is prefixed with `/cf` because of the gateway configuration above. If you
+change `prefix_path`, adjust the URLs accordingly.
+:::
 
 ## Verify it works
 

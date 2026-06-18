@@ -103,6 +103,13 @@ Security is enforced as a layered path you cannot accidentally bypass:
 Entities opt into scoping with `#[derive(Scopable)]`, declaring which columns map to the
 tenant / owner / resource / type dimensions.
 
+:::danger[Never bypass SecureConn]
+Reaching for a raw database connection skips `AccessScope` and can leak data across
+tenants. There is intentionally no unscoped escape hatch — raw SQL outside migrations is
+rejected by the workspace lints. Always go through `SecureConn` with a scope obtained from
+the `PolicyEnforcer`.
+:::
+
 ## Errors: one canonical model
 
 All errors use a single canonical taxonomy of **16 categories** (aligned with gRPC status

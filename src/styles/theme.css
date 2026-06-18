@@ -212,6 +212,54 @@
 }
 
 /* ---------------------------------------------------------------- *
+ * Asides / callouts — on-brand semantic palette
+ *   note → blue · tip → green · caution → amber · danger → red
+ * Starlight's asides read --sl-color-{type} / -low / -high. (Default `tip`
+ * is purple; we recolor it green to match the brand.)
+ * ---------------------------------------------------------------- */
+:root {
+  --sl-color-blue: #4f9fe0;
+  --sl-color-blue-low: #16273a;
+  --sl-color-blue-high: #a9d2f7;
+  --sl-color-green: #56b98a;
+  --sl-color-green-low: #13301f;
+  --sl-color-green-high: #9adfb6;
+  --sl-color-orange: #e0a85a;
+  --sl-color-orange-low: #352716;
+  --sl-color-orange-high: #f1ca8c;
+  --sl-color-red: #e2786a;
+  --sl-color-red-low: #371d19;
+  --sl-color-red-high: #f4a89d;
+}
+
+:root[data-theme='light'] {
+  --sl-color-blue: #0057b8;
+  --sl-color-blue-low: #e3ecfa;
+  --sl-color-blue-high: #003e82;
+  --sl-color-green: #2f8a5a;
+  --sl-color-green-low: #e0f2e8;
+  --sl-color-green-high: #1c5638;
+  --sl-color-orange: #b5781e;
+  --sl-color-orange-low: #f7edd9;
+  --sl-color-orange-high: #774d12;
+  --sl-color-red: #c9503a;
+  --sl-color-red-low: #f8e3de;
+  --sl-color-red-high: #8c3122;
+}
+
+/* Recolor `tip` from Starlight's default purple to brand green. */
+.starlight-aside--tip {
+  --sl-color-asides-text-accent: var(--sl-color-green-high);
+  --sl-color-asides-border: var(--sl-color-green);
+  background-color: var(--sl-color-green-low);
+}
+
+/* Round the open (right) side to match our panels; keep the accent bar crisp. */
+.starlight-aside {
+  border-radius: 0 0.375rem 0.375rem 0;
+}
+
+/* ---------------------------------------------------------------- *
  * Reduced motion
  * ---------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
