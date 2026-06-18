@@ -29,15 +29,19 @@ export default defineConfig({
       expressiveCode: {
         themes: ['github-dark'],
         styleOverrides: {
-          borderRadius: '0.3rem',
-          borderColor: '#262d37',
-          codeBackground: '#161a20',
+          borderRadius: '0.5rem',
+          borderWidth: '1px',
+          // A clearly visible cool border + a code surface lifted above the page
+          // background so the block reads as a distinct panel (the page bg is
+          // #0f1217). Values mirror the --gears-code-* tokens in theme.css.
+          borderColor: '#2d3a47',
+          codeBackground: '#1a2029',
           frames: {
             editorActiveTabIndicatorTopColor: '#4f9fe0',
-            editorActiveTabBackground: '#1d232b',
-            editorTabBarBackground: '#0f1217',
-            terminalTitlebarBackground: '#0f1217',
-            terminalBackground: '#161a20',
+            editorActiveTabBackground: '#1a2029',
+            editorTabBarBackground: '#12161c',
+            terminalTitlebarBackground: '#12161c',
+            terminalBackground: '#1a2029',
           },
         },
       },
