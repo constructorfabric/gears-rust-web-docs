@@ -59,9 +59,9 @@
   /* Code surfaces — intentionally dark in BOTH site modes (matching the
      always-dark Expressive Code blocks); not redefined for light mode.
      Keep in sync with the expressiveCode styleOverrides in astro.config.mjs. */
-  --gears-code-bg: #161a20;
-  --gears-code-bar: #0f1217;
-  --gears-code-border: #262d37;
+  --gears-code-bg: #1a2029;
+  --gears-code-bar: #12161c;
+  --gears-code-border: #2d3a47;
   --gears-code-text: #e6e9ec;
 
   /* Typography */
