@@ -1,14 +1,10 @@
-# gears.dev
+# gears-rust-web-docs
 
-The documentation portal for **Gears** — a Rust runtime for composable,
-secure-by-default platform components.
+The documentation portal for **Constructor Fabric Gears** — a Rust runtime for
+composable, secure-by-default platform components. Deployed as **gears.dev**.
 
 Built with [Astro](https://astro.build) + [Starlight](https://starlight.astro.build),
 authored in Markdown/MDX, and shipped as a static site.
-
-> **Status:** baseline scaffold (Phase 1). The site builds and navigates, but the
-> branded theme and real documentation content land in later phases. See the
-> implementation plan for the full roadmap.
 
 ## Prerequisites
 
