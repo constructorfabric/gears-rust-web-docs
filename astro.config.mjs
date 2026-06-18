@@ -72,10 +72,6 @@ export default defineConfig({
           items: [{ autogenerate: { directory: 'architecture' } }],
         },
         {
-          label: 'ADRs',
-          items: [{ autogenerate: { directory: 'adrs' } }],
-        },
-        {
           label: 'Reference',
           items: [{ autogenerate: { directory: 'reference' } }],
         },

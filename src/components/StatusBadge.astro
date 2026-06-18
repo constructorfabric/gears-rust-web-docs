@@ -1,22 +1,22 @@
 ---
 /**
- * StatusBadge — small pill for ADR status and gear implementation phase.
- * ADR statuses: proposed | accepted | superseded | deprecated | rejected
+ * StatusBadge — small pill for feature/gear maturity and implementation phase.
+ * Statuses:     stable | beta | experimental | deprecated
  * Gear phases:  p1 … p5
- * Usage: <StatusBadge status="accepted" /> or <StatusBadge phase="p2" />
+ * Usage: <StatusBadge status="beta" /> or <StatusBadge phase="p2" />
  */
 interface Props {
-  status?: 'proposed' | 'accepted' | 'superseded' | 'deprecated' | 'rejected';
+  status?: 'stable' | 'beta' | 'experimental' | 'deprecated';
   phase?: 'p1' | 'p2' | 'p3' | 'p4' | 'p5';
   label?: string;
 }
 const { status, phase, label } = Astro.props;
 const tone = status
-  ? status === 'accepted'
+  ? status === 'stable'
     ? 'ok'
-    : status === 'proposed'
+    : status === 'beta'
       ? 'info'
-      : status === 'rejected'
+      : status === 'deprecated'
         ? 'danger'
         : 'muted'
   : 'phase';

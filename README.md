@@ -41,7 +41,6 @@ src/
       concepts/
       guides/
       architecture/
-      adrs/
       reference/
       examples/
       contributing/
