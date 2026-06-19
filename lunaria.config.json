@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/@lunariajs/core/config.schema.json",
+  "repository": {
+    "name": "constructorfabric/gears-rust-web-docs",
+    "branch": "main",
+    "hosting": "github"
+  },
+  "defaultLocale": {
+    "label": "English",
+    "lang": "en"
+  },
+  "locales": [
+    {
+      "label": "Русский",
+      "lang": "ru"
+    }
+  ],
+  "files": [
+    {
+      "location": "src/content/docs/**/*.{md,mdx}",
+      "pattern": "src/content/docs/@lang/@path",
+      "type": "universal",
+      "ignore": []
+    }
+  ],
+  "dashboard": {
+    "title": "Gears Docs Translation Status",
+    "description": "Translation progress for the Gears documentation. `ru` is wired up as an example target locale so the dashboard renders; add real locales in astro.config.mjs and here, then translate files under src/content/docs/<lang>/.",
+    "site": "https://gears.dev/i18n/",
+    "basesToHide": ["src/content/docs/"],
+    "ui": {
+      "statusByLocale.heading": "Translation progress by locale",
+      "statusByLocale.incompleteLocalizationLink": "incomplete translation",
+      "statusByLocale.outdatedLocalizationLink": "outdated translation",
+      "statusByLocale.completeLocalization": "This translation is complete, amazing job! 🎉",
+      "statusByFile.heading": "Translation status by file"
+    }
+  }
+}
