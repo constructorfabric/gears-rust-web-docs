@@ -9,8 +9,11 @@
     "node": ">=22.13.0"
   },
   "scripts": {
+    "sync": "node scripts/sync-docs.mjs",
+    "predev": "npm run sync",
     "dev": "astro dev",
     "start": "astro dev",
+    "prebuild": "npm run sync",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",

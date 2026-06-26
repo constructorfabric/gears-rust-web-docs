@@ -144,3 +144,10 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# Sync script temp files
+tmp/
+.sync-lock.json
+
+# Content is fetched from gears-rust at build/dev time (see scripts/sync-docs.mjs)
+src/content/docs/

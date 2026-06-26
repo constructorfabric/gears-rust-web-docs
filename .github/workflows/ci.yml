@@ -16,6 +16,8 @@ jobs:
   build:
     name: Lint, build & link-check
     runs-on: ubuntu-latest
+    env:
+      GEARS_RUST_PATH: tmp/gears-rust
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,6 +26,13 @@ jobs:
           # so the build needs the full history (not a shallow clone). The
           # /i18n dashboard is emitted during `pnpm build` below.
           fetch-depth: 0
+
+      - name: Checkout gears-rust (docs source)
+        uses: actions/checkout@v4
+        with:
+          repository: constructorfabric/gears-rust
+          ref: main
+          path: tmp/gears-rust
 
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
@@ -36,6 +45,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Sync docs from gears-rust
+        run: pnpm sync
 
       - name: Type & content check
         run: pnpm check

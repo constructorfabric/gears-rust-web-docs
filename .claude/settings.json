@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(pnpm install *)",
+      "Bash(npm --version)"
+    ]
+  }
+}

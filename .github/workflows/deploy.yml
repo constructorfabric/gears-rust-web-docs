@@ -1,0 +1,48 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [docs-sync]        # fired by gears-rust on docs change
+  push:
+    branches: [main]          # infra/theme changes also redeploy
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - uses: actions/checkout@v4
+        with:
+          repository: constructorfabric/gears-rust
+          ref: ${{ github.event.client_payload.sha || 'main' }}
+          path: tmp/gears-rust
+
+      # prebuild hook runs the sync, pulling content from the gears-rust checkout
+      - run: GEARS_RUST_PATH=tmp/gears-rust GITHUB_SHA=${{ github.event.client_payload.sha || github.sha }} pnpm build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - uses: actions/deploy-pages@v4
+        id: deploy

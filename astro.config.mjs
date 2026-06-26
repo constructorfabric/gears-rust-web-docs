@@ -5,8 +5,10 @@ import lunaria from './config/lunaria-starlight.mjs';
 
 // https://astro.build/config
 export default defineConfig({
-  // TODO(Phase 7): set the production URL once a deploy host is chosen.
   site: 'https://gears.dev',
+  // GitHub Pages URL: https://constructorfabric.github.io/gears-rust-web-docs
+  // base is set to empty string for custom domain, or '/gears-rust-web-docs' for Pages.
+  // base: '/gears-rust-web-docs',
   // Emit all stylesheets as files (don't inline small ones). Avoids an
   // Expressive Code asset-hash mismatch on pages whose code blocks are all
   // plaintext, which otherwise produced a 404 link to an un-emitted CSS file.
@@ -26,10 +28,10 @@ export default defineConfig({
         root: { label: 'English', lang: 'en' },
         ru: { label: 'Русский', lang: 'ru' },
       },
-      // "Edit page" links point at the upstream docs repo (not a fork), so the
-      // GitHub web editor opens a PR-ready edit. The trailing slash is required.
+      // "Edit page" links point at the source in gears-rust, not this docs repo.
+      // Users edit in the source repo (docs/web-docs/), then sync handles the update.
       editLink: {
-        baseUrl: 'https://github.com/constructorfabric/gears-rust-web-docs/edit/main/',
+        baseUrl: 'https://github.com/constructorfabric/gears-rust/edit/main/docs/web-docs/',
       },
       // Renders the Lunaria translation-status dashboard at /i18n during
       // `astro build` (no separate CLI step). `sync: false` keeps
