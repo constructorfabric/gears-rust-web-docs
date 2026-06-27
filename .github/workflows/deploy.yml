@@ -6,6 +6,7 @@ on:
     types: [docs-sync]        # fired by gears-rust on docs change
   push:
     branches: [main]          # infra/theme changes also redeploy
+    tags: ['v*']              # release docs for version tags
 
 permissions:
   contents: read
@@ -14,7 +15,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -22,6 +23,10 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      GEARS_RUST_PATH: tmp/gears-rust
+      GITHUB_SHA: ${{ github.event.client_payload.sha || github.sha }}
+      BASE: /gears-rust-web-docs
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -37,8 +42,7 @@ jobs:
           ref: ${{ github.event.client_payload.sha || 'main' }}
           path: tmp/gears-rust
 
-      # prebuild hook runs the sync, pulling content from the gears-rust checkout
-      - run: GEARS_RUST_PATH=tmp/gears-rust GITHUB_SHA=${{ github.event.client_payload.sha || github.sha }} pnpm build
+      - run: pnpm build
 
       - uses: actions/upload-pages-artifact@v3
         with:

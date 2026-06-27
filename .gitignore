@@ -151,3 +151,7 @@ tmp/
 
 # Content is fetched from gears-rust at build/dev time (see scripts/sync-docs.mjs)
 src/content/docs/
+
+# Synced assets from gears-rust/docs/web-docs are mirrored to public/synced at build/dev time.
+public/synced/
+.idea/
