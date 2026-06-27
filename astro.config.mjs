@@ -3,12 +3,16 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import lunaria from './config/lunaria-starlight.mjs';
 
+// GitHub Pages URL: https://constructorfabric.github.io/gears-rust-web-docs
+// Content links are authored relative (../guides/...) in gears-rust, so they
+// resolve correctly under this base path and would also work at a root custom
+// domain. For a custom domain (gears.dev) drop `base` and set site accordingly.
+const BASE = process.env.BASE ?? '/gears-rust-web-docs';
+
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://gears.dev',
-  // GitHub Pages URL: https://constructorfabric.github.io/gears-rust-web-docs
-  // base is set to empty string for custom domain, or '/gears-rust-web-docs' for Pages.
-  // base: '/gears-rust-web-docs',
+  site: 'https://constructorfabric.github.io',
+  base: BASE,
   // Emit all stylesheets as files (don't inline small ones). Avoids an
   // Expressive Code asset-hash mismatch on pages whose code blocks are all
   // plaintext, which otherwise produced a 404 link to an un-emitted CSS file.

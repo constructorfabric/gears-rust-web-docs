@@ -13,12 +13,12 @@
     "predev": "npm run sync",
     "dev": "astro dev",
     "start": "astro dev",
-    "prebuild": "npm run sync",
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
     "lint:md": "markdownlint-cli2",
-    "links": "linkinator ./dist --recurse --silent --skip \"github\\.com gears\\.dev constructor\\.com\""
+    "links": "linkinator ./dist --config linkinator.config.json",
+    "clean": "rm -rf dist .astro src/content/docs public/synced"
   },
   "dependencies": {
     "@astrojs/starlight": "0.40.0",
