@@ -1,20 +1,15 @@
 #!/usr/bin/env node
 
-import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, copyFileSync } from 'fs'
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, copyFileSync, existsSync } from 'fs'
 import { join, relative, dirname, extname } from 'path'
 import config from './sync.config.mjs'
 
-const sourceBase = join(config.source, config.sourceDir)
 const targetBase = config.targetDir
 const targetPublic = config.publicAssetsDir ?? 'public/synced'
 const base = (config.base ?? '/gears-rust-web-docs').replace(/\/+$/, '')
 const withBase = (p) => `${base}${p}`
 
 const ASSET_EXT_RE = /\.(png|jpe?g|gif|svg|webp|ico|pdf|json|ya?ml|zip|tar|gz|mp4|webm|mov|mp3|ogg)$/i
-
-const EDIT_URL_BASE = (
-  process.env.EDIT_URL_BASE ?? 'https://github.com/constructorfabric/gears-rust/edit/main/docs/web-docs/'
-).replace(/\/+$/, '') + '/'
 
 function getFrontmatterBounds(content) {
   if (!content.startsWith('---')) return null
@@ -29,16 +24,16 @@ function getFrontmatterBounds(content) {
   return { start: 0, end, bodyStart, bodyEnd, body: match[2], eol }
 }
 
-function walkDir(dir) {
+function walkDir(dir, baseDir = dir) {
   const files = []
   const entries = readdirSync(dir, { withFileTypes: true })
 
   for (const entry of entries) {
     const fullPath = join(dir, entry.name)
-    const relPath = relative(sourceBase, fullPath)
+    const relPath = relative(baseDir, fullPath)
 
     if (entry.isDirectory()) {
-      files.push(...walkDir(fullPath))
+      files.push(...walkDir(fullPath, baseDir))
     } else if (entry.isFile()) {
       files.push(relPath)
     }
@@ -47,16 +42,7 @@ function walkDir(dir) {
   return files
 }
 
-function rewriteAssetPaths(content, fileDir) {
-  // Rewrite relative references to shared asset directories so they resolve
-  // under the site's base path (e.g. GitHub Pages subfolder).
-  //
-  // NOTE: the (../)+img/ patterns assume assets live at the ROOT of docs/web-docs
-  // (e.g. docs/web-docs/img/). copyAsset() preserves the full relPath, so if an
-  // image is at guides/img/hero.png the copy lands at public/synced/guides/img/hero.png
-  // but these regexes would produce /synced/img/hero.png — a mismatch. Currently
-  // harmless (no images in the docs), but fix both the regexes and the copy path
-  // before adding images to subdirectories.
+function rewriteAssetPaths(content) {
   return content
     .replace(/(!?\[[^\]]*\])\((\.\.\/)+img\/([^)]+)\)/g, (_, prefix, _dots, file) => {
       return `${prefix}(${withBase('/synced/img/' + file)})`
@@ -68,14 +54,12 @@ function rewriteAssetPaths(content, fileDir) {
       return `${prefix}(${withBase('/synced/images/' + file)})`
     })
     .replace(/(!?\[[^\]]*\])\(\.\/([^)]+)\)/g, (_, prefix, file) => {
-      // Only rewrite same-directory asset links; leave page links as-is.
       if (!ASSET_EXT_RE.test(file)) return `${prefix}(./${file})`
-      const dir = fileDir || ''
-      return `${prefix}(${withBase('/synced/' + (dir ? dir + '/' : '') + file)})`
+      return `${prefix}(${withBase('/synced/' + file)})`
     })
 }
 
-function copyAsset(relPath) {
+function copyAsset(relPath, sourceBase) {
   const srcFile = join(sourceBase, relPath)
   const tgtFile = join(targetPublic, relPath)
   mkdirSync(dirname(tgtFile), { recursive: true })
@@ -83,11 +67,10 @@ function copyAsset(relPath) {
   return relPath
 }
 
-function syncFile(relPath) {
+function syncFile(relPath, sourceBase, editUrlBase, repoLabel) {
   const srcFile = join(sourceBase, relPath)
   const tgtFile = join(targetBase, relPath)
   const tgtDir = dirname(tgtFile)
-  const fileDir = dirname(relPath)
 
   // Ensure target directory exists
   mkdirSync(tgtDir, { recursive: true })
@@ -95,7 +78,7 @@ function syncFile(relPath) {
   // Copy non-markdown assets to public/ so that rewritten site-absolute URLs work.
   const ext = extname(relPath).toLowerCase()
   if (!['.md', '.mdx'].includes(ext)) {
-    copyAsset(relPath)
+    copyAsset(relPath, sourceBase)
     return relPath
   }
 
@@ -103,7 +86,7 @@ function syncFile(relPath) {
   let content = readFileSync(srcFile, 'utf8')
 
   // Rewrite relative asset paths that climb out of the content tree.
-  content = rewriteAssetPaths(content, fileDir)
+  content = rewriteAssetPaths(content)
 
   const fm = getFrontmatterBounds(content)
 
@@ -112,7 +95,7 @@ function syncFile(relPath) {
     const sha = process.env.GITHUB_SHA || 'local'
     // Use HTML comment for .md, MDX comment for .mdx
     const ismdx = relPath.endsWith('.mdx')
-    const syncComment = ismdx ? `{/* synced from gears-rust @ ${sha} */}` : `<!-- synced from gears-rust @ ${sha} -->`
+    const syncComment = ismdx ? `{/* synced from ${repoLabel} @ ${sha} */}` : `<!-- synced from ${repoLabel} @ ${sha} -->`
 
     // If file has frontmatter, insert comment after it
     if (fm) {
@@ -123,9 +106,8 @@ function syncFile(relPath) {
     }
   }
 
-  // Override Starlight's edit link so it points at the source file in gears-rust
-  // rather than the local src/content/docs/ copy.
-  const editUrl = new URL(relPath, EDIT_URL_BASE).href
+  // Override Starlight's edit link so it points at the source file in the correct repo
+  const editUrl = new URL(relPath, editUrlBase).href
   if (fm) {
     const editUrlPattern = /^editUrl:.*$/m
     if (editUrlPattern.test(fm.body)) {
@@ -143,29 +125,52 @@ function syncFile(relPath) {
   return relPath
 }
 
+function syncSource(source) {
+  const sourceBase = join(source.path, source.sourceDir)
+  console.log(`Syncing from: ${sourceBase} (${source.repo})`)
+
+  const files = walkDir(sourceBase)
+  console.log(`Found ${files.length} files in ${source.repo}`)
+
+  const synced = files.map(relPath =>
+    syncFile(relPath, sourceBase, source.editUrlBase, source.repo)
+  )
+  console.log(`Synced ${synced.length} files from ${source.repo}`)
+
+  return synced
+}
+
 try {
-  console.log(`Syncing from: ${sourceBase}`)
   console.log(`Syncing to: ${targetBase}`)
   console.log(`Public assets: ${targetPublic}`)
   console.log(`Base path: ${base}`)
 
-  // Clear target so files deleted upstream don't linger between syncs.
+  // Clear target once before syncing all sources
   rmSync(targetBase, { recursive: true, force: true })
-
-  // Clear synced assets so deleted upstream files don't linger.
   rmSync(targetPublic, { recursive: true, force: true })
 
-  const files = walkDir(sourceBase)
-  console.log(`Found ${files.length} files`)
+  // Sync all sources and collect file list
+  const allSynced = []
+  const sourcesList = []
+  for (const source of config.sources) {
+    const sourceBase = join(source.path, source.sourceDir)
+    if (!existsSync(sourceBase)) {
+      console.warn(`⚠ Skipping ${source.repo}: ${sourceBase} not found`)
+      continue
+    }
+    const synced = syncSource(source)
+    allSynced.push(...synced)
+    sourcesList.push(source.repo)
+  }
 
-  const synced = files.map(syncFile)
-  console.log(`Synced ${synced.length} files`)
+  console.log(`Total synced ${allSynced.length} files`)
 
-  // Write lock file
+  // Write lock file with all synced files and source list
   const lockData = {
     sha: process.env.GITHUB_SHA || 'local',
     timestamp: new Date().toISOString(),
-    files: synced.sort(),
+    sources: sourcesList,
+    files: allSynced.sort(),
   }
   writeFileSync('.sync-lock.json', JSON.stringify(lockData, null, 2), 'utf8')
   console.log('✓ Sync complete. Lock file written.')

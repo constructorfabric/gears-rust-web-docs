@@ -20,8 +20,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GEARS_RUST_PATH: tmp/gears-rust
+      CARGO_GEARS_PATH: tmp/cargo-gears
       BASE: /gears-rust-web-docs
     steps:
       - name: Checkout
@@ -46,6 +47,13 @@ jobs:
           ref: main
           path: tmp/gears-rust
 
+      - name: Checkout cargo-gears (CLI docs source)
+        uses: actions/checkout@v4
+        with:
+          repository: constructorfabric/cargo-gears
+          ref: main
+          path: tmp/cargo-gears
+
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
 
@@ -58,7 +66,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Sync docs from gears-rust
+      - name: Sync docs from all sources
         run: pnpm sync
 
       - name: Type & content check

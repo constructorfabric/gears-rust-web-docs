@@ -86,6 +86,10 @@ export default defineConfig({
           items: [{ autogenerate: { directory: 'get-started' } }],
         },
         {
+          label: 'CLI',
+          items: [{ autogenerate: { directory: 'cli' } }],
+        },
+        {
           label: 'Concepts',
           items: [{ autogenerate: { directory: 'concepts' } }],
         },
