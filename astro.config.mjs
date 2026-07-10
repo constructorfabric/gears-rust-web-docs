@@ -91,12 +91,12 @@ export default defineConfig({
           items: [{ autogenerate: { directory: 'build-with-gears' } }],
         },
         {
-          label: 'CLI',
-          items: [{ autogenerate: { directory: 'cli' } }],
-        },
-        {
           label: 'Concepts',
           items: [{ autogenerate: { directory: 'concepts' } }],
+        },
+        {
+          label: 'cargo gears CLI',
+          items: [{ autogenerate: { directory: 'cli' } }],
         },
         {
           label: 'Contribute',
