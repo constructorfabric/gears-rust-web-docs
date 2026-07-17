@@ -21,17 +21,17 @@
     "clean": "rm -rf dist .astro src/content/docs public/synced"
   },
   "dependencies": {
-    "@astrojs/starlight": "0.40.0",
+    "@astrojs/starlight": "0.41.3",
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/jetbrains-mono": "^5.2.8",
     "@lunariajs/core": "^0.1.1",
     "astro": "6.4.8",
-    "sharp": "^0.34.0"
+    "sharp": "^0.35.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
     "linkinator": "^7.6.1",
-    "markdownlint-cli2": "^0.22.1",
-    "typescript": "^5.7.0"
+    "markdownlint-cli2": "^0.23.1",
+    "typescript": "^7.0.2"
   }
 }
