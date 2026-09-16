@@ -33,7 +33,7 @@ jobs:
       BASE: /gears-rust-web-docs
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # Lunaria computes per-file translation freshness from git history,
           # so the build needs the full history (not a shallow clone). The
@@ -41,24 +41,24 @@ jobs:
           fetch-depth: 0
 
       - name: Checkout gears-rust (docs source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: constructorfabric/gears-rust
           ref: main
           path: tmp/gears-rust
 
       - name: Checkout cargo-gears (CLI docs source)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: constructorfabric/cargo-gears
           ref: main
           path: tmp/cargo-gears
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
