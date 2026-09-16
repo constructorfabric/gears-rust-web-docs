@@ -1,0 +1,765 @@
+---
+/**
+ * FlowDiagram — a staged process figure built from semantic HTML cards and
+ * drawn connectors. Renders 2–4 ordered stages left-to-right on wide
+ * containers and top-to-bottom on narrow ones. No client-side JavaScript.
+ *
+ * Sibling component: `ConceptDiagram` wraps hand-authored SVG/raster artwork.
+ * Reach for `ConceptDiagram` when the picture is drawn by a designer; reach for
+ * `FlowDiagram` when the picture is *data* — an ordered pipeline whose stages
+ * and cards should stay searchable, translatable and screen-reader friendly.
+ *
+ * Structural mistakes (wrong stage count, empty stage, duplicate id, a
+ * transition on the final stage) throw during rendering with a message naming
+ * the offending stage or node. Malformed diagrams never render.
+ *
+ * `kind` is decorative: it only tints the card's accent rule, eyebrow and
+ * badge. Anything meaningful belongs in `eyebrow`, `badge` or `description`,
+ * because colour alone is not an accessible carrier of information.
+ *
+ * Usage (from e.g. `src/content/docs/concepts/contracts.mdx`):
+ *
+ *   ---
+ *   title: Contracts
+ *   ---
+ *   import FlowDiagram from '../../../components/FlowDiagram.astro';
+ *
+ *   export const contractStages = [
+ *     {
+ *       id: 'define',
+ *       label: 'Define the contract',
+ *       eyebrow: 'You write',
+ *       transition: 'expand at compile time',
+ *       nodes: [
+ *         {
+ *           id: 'base',
+ *           eyebrow: 'Base contract',
+ *           title: 'Payment API',
+ *           code: '#[toolkit::contract] trait PaymentApi',
+ *           description: 'Transport-independent interface used by application code.',
+ *           kind: 'source',
+ *           emphasized: true,
+ *         },
+ *         {
+ *           id: 'rest',
+ *           eyebrow: 'REST projection',
+ *           title: 'REST binding',
+ *           code: '#[toolkit::rest_contract] trait PaymentApiRest',
+ *           kind: 'transform',
+ *         },
+ *       ],
+ *     },
+ *     {
+ *       id: 'generate',
+ *       label: 'Generate transport artifacts',
+ *       eyebrow: 'The macro emits',
+ *       nodes: [
+ *         { id: 'client', title: 'PaymentApiRestClient', kind: 'artifact', badge: 'generated' },
+ *       ],
+ *     },
+ *   ];
+ *
+ *   <FlowDiagram
+ *     title="From trait to transport"
+ *     description="One Rust trait drives both the client and the server bindings."
+ *     ariaLabel="Two-stage flow from the contract definition to the generated artifacts"
+ *     caption="Application code keeps depending on the base trait."
+ *     stages={contractStages}
+ *   />
+ */
+
+type FlowNodeKind =
+  | 'source'
+  | 'transform'
+  | 'artifact'
+  | 'runtime'
+  | 'transport'
+  | 'service'
+  | 'neutral';
+
+interface FlowNode {
+  /** Unique across the whole diagram. Used for validation and debugging. */
+  readonly id: string;
+  readonly title: string;
+  /** Small type label above the title. */
+  readonly eyebrow?: string;
+  /** Monospace identifier, e.g. a Rust path or trait signature. */
+  readonly code?: string;
+  readonly description?: string;
+  /** Compact pill, e.g. `generated`. */
+  readonly badge?: string;
+  /** Decorative accent colour only — see the note above. */
+  readonly kind?: FlowNodeKind;
+  readonly emphasized?: boolean;
+}
+
+interface FlowStage {
+  readonly id: string;
+  readonly label: string;
+  readonly eyebrow?: string;
+  readonly description?: string;
+  readonly nodes: readonly FlowNode[];
+  /**
+   * Text shown beside the connector leaving this stage. Because it labels the
+   * hand-off to the *next* stage, it is rejected on the final stage.
+   */
+  readonly transition?: string;
+}
+
+interface Props {
+  /** Visible name of the figure; also becomes its accessible name. */
+  readonly title?: string;
+  /** Lede paragraph above the stages. */
+  readonly description?: string;
+  readonly stages: readonly FlowStage[];
+  /** Footnote below the stages, rendered as `<figcaption>`. */
+  readonly caption?: string;
+  /** Overrides `title` as the accessible name when a longer one reads better. */
+  readonly ariaLabel?: string;
+  /** Tighter padding and type for dense pages. */
+  readonly compact?: boolean;
+}
+
+const { title, description, stages, caption, ariaLabel, compact = false } = Astro.props;
+
+const MIN_STAGES = 2;
+const MAX_STAGES = 4;
+
+const subject = title ? `FlowDiagram "${title}"` : 'FlowDiagram';
+
+// A `function` declaration (not a const arrow) so TypeScript applies
+// never-returning control-flow narrowing at every call site below.
+function fail(message: string): never {
+  throw new Error(`[${subject}] ${message}`);
+}
+
+// Returns a plain boolean rather than a type predicate on purpose: the
+// built-in `Array.isArray` narrows `readonly T[]` to `any[]`, which would
+// erase the declared element types for the rest of the file.
+function isArray(value: unknown): boolean {
+  return Array.isArray(value);
+}
+
+if (!isArray(stages)) {
+  fail('`stages` is required and must be an array of FlowStage objects.');
+}
+if (stages.length < MIN_STAGES || stages.length > MAX_STAGES) {
+  fail(
+    `expects ${MIN_STAGES}–${MAX_STAGES} stages, received ${stages.length}. ` +
+      'Longer pipelines do not fit the article column — split them into two diagrams.'
+  );
+}
+
+const seenStageIds = new Set<string>();
+const seenNodeIds = new Map<string, string>();
+
+stages.forEach((stage, stageIndex) => {
+  const at = `stage ${stageIndex + 1} of ${stages.length} (id="${stage?.id ?? '<missing>'}")`;
+
+  if (!stage || typeof stage !== 'object') fail(`${at} is not an object.`);
+  if (!stage.id?.trim()) fail(`${at} is missing a non-empty \`id\`.`);
+  if (!stage.label?.trim()) fail(`${at} is missing a non-empty \`label\`.`);
+  if (seenStageIds.has(stage.id)) {
+    fail(`duplicate stage id "${stage.id}" at ${at}. Stage ids must be unique within a diagram.`);
+  }
+  seenStageIds.add(stage.id);
+
+  if (!isArray(stage.nodes) || stage.nodes.length === 0) {
+    fail(`${at} has no nodes. Every stage needs at least one node.`);
+  }
+
+  stage.nodes.forEach((node, nodeIndex) => {
+    const nodeAt = `node ${nodeIndex + 1} (id="${node?.id ?? '<missing>'}") in ${at}`;
+    if (!node || typeof node !== 'object') fail(`${nodeAt} is not an object.`);
+    if (!node.id?.trim()) fail(`${nodeAt} is missing a non-empty \`id\`.`);
+    if (!node.title?.trim()) fail(`${nodeAt} is missing a non-empty \`title\`.`);
+    const owner = seenNodeIds.get(node.id);
+    if (owner !== undefined) {
+      fail(
+        `duplicate node id "${node.id}" at ${nodeAt}; already used in stage "${owner}". ` +
+          'Node ids must be unique across the whole diagram.'
+      );
+    }
+    seenNodeIds.set(node.id, stage.id);
+  });
+
+  if (stage.transition?.trim() && stageIndex === stages.length - 1) {
+    fail(
+      `${at} is the final stage but declares \`transition: "${stage.transition}"\`. ` +
+        'A transition labels the hand-off to the NEXT stage, so the last stage cannot ' +
+        'have one. Move it to the preceding stage, or add the stage it points at.'
+    );
+  }
+});
+
+const stageCount = stages.length;
+const hasTransitions = stages.some((stage) => Boolean(stage.transition?.trim()));
+
+// One id namespace per instance so two diagrams on the same page cannot collide.
+const uid = crypto.randomUUID().slice(0, 8);
+const titleId = title ? `gears-flow-${uid}-title` : undefined;
+const captionId = caption ? `gears-flow-${uid}-caption` : undefined;
+
+// An explicit `ariaLabel` wins: the author asked for a longer, more descriptive
+// name than the visible title. Otherwise the visible title names the figure,
+// which keeps the accessible name in sync with the translated text.
+const labelledBy = ariaLabel ? undefined : titleId;
+---
+
+<figure
+  class="gears-flow not-content"
+  data-stages={stageCount}
+  data-transitions={hasTransitions ? '' : undefined}
+  data-compact={compact ? '' : undefined}
+  aria-label={ariaLabel}
+  aria-labelledby={labelledBy}
+  aria-describedby={captionId}
+>
+  {
+    (title || description) && (
+      <div class="gears-flow__head">
+        {title && (
+          <p class="gears-flow__title" id={titleId}>
+            {title}
+          </p>
+        )}
+        {description && <p class="gears-flow__lede">{description}</p>}
+      </div>
+    )
+  }
+
+  <ol class="gears-flow__track" role="list">
+    {
+      stages.map((stage, stageIndex) => (
+        <li class="gears-flow__stage">
+          <div class="gears-flow__panel">
+            <div class="gears-flow__stage-head">
+              <p class="gears-flow__stage-label">
+                <span class="gears-flow__stage-index" aria-hidden="true">
+                  {String(stageIndex + 1).padStart(2, '0')}
+                </span>
+                {stage.label}
+              </p>
+              {stage.eyebrow && <span class="gears-flow__stage-eyebrow">{stage.eyebrow}</span>}
+              {stage.description && <p class="gears-flow__stage-desc">{stage.description}</p>}
+            </div>
+
+            <ul class="gears-flow__cards" role="list">
+              {stage.nodes.map((node) => (
+                <li
+                  class="gears-flow__card"
+                  data-kind={node.kind ?? 'neutral'}
+                  data-emphasized={node.emphasized ? '' : undefined}
+                >
+                  {node.eyebrow && <span class="gears-flow__card-eyebrow">{node.eyebrow}</span>}
+                  <p class="gears-flow__card-title">{node.title}</p>
+                  {node.code && <code class="gears-flow__card-code">{node.code}</code>}
+                  {node.description && <p class="gears-flow__card-desc">{node.description}</p>}
+                  {node.badge && <span class="gears-flow__card-badge">{node.badge}</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {stageIndex < stageCount - 1 && (
+            <div class="gears-flow__link">
+              {/* Decorative: the direction is conveyed by the ordered list. */}
+              <span class="gears-flow__arrow" aria-hidden="true">
+                <span class="gears-flow__rule" />
+                <svg
+                  class="gears-flow__chevron"
+                  viewBox="0 0 6 12"
+                  width="6"
+                  height="12"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path
+                    d="M0.9 1 L5 6 L0.9 11"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+              {/* Not hidden: the transition text carries meaning. */}
+              {stage.transition && <span class="gears-flow__transition">{stage.transition}</span>}
+            </div>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+
+  {caption && <figcaption class="gears-flow__caption" id={captionId}>{caption}</figcaption>}
+</figure>
+
+<style>
+  /* ---------------------------------------------------------------- *
+   * Root — a size container so the layout responds to the article
+   * column rather than the viewport (the Starlight sidebar and ToC
+   * make those two very different numbers).
+   * ---------------------------------------------------------------- */
+  .gears-flow {
+    container: gears-flow / inline-size;
+    margin: 1.75rem 0;
+    padding: 1.25rem;
+    border: 1px solid var(--gears-hairline);
+    border-radius: var(--gears-radius-card);
+    background-color: var(--gears-surface);
+    /* Blueprint grid, deliberately quieter than ConceptDiagram's: a 40px
+       cell at roughly half the alpha, so the cards stay the focus. */
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--gears-grid-line) 55%, transparent) 1px, transparent 1px),
+      linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--gears-grid-line) 55%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 40px 40px;
+    color: var(--gears-text);
+    font-family: var(--sl-font);
+    font-size: 0.9rem;
+    /* Starlight's body line-height (1.75) is too airy inside cards. */
+    line-height: 1.5;
+
+    /* Horizontal gutter: real reserved grid-gap space, so a transition label
+       centred in it can never paint over a card. Wider gutter = narrower
+       panels, so it is tuned per stage count. */
+    --flow-gap-inline: clamp(3rem, 9cqi, 5.5rem);
+    /* Vertical breathing room, applied as the connector's own block padding
+       (see the direction bundle) rather than as a grid row-gap, so the two
+       cannot stack into an oversized gap. */
+    --flow-gap-block: 0.7rem;
+    --flow-card-pad: 0.7rem 0.8rem;
+    --flow-card-gap: 0.5rem;
+    --flow-line: color-mix(in srgb, var(--gears-accent) 50%, var(--gears-hairline));
+  }
+  /* Four columns split the same width four ways, so the gutter has to give
+     some room back to the panels without starving the labels. */
+  .gears-flow[data-stages='4'] {
+    --flow-gap-inline: clamp(2.5rem, 7cqi, 4.5rem);
+  }
+  /* No labels to fit means the gutter can be tighter. */
+  .gears-flow:not([data-transitions]) {
+    --flow-gap-inline: clamp(2rem, 5cqi, 3rem);
+    --flow-gap-block: 0.55rem;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Heading block
+   * ---------------------------------------------------------------- */
+  .gears-flow__head {
+    margin-bottom: 1.1rem;
+  }
+  .gears-flow__title {
+    margin: 0;
+    font-family: var(--gears-font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--gears-text);
+  }
+  .gears-flow__lede {
+    margin: 0.35rem 0 0;
+    max-width: 60ch;
+    font-size: 0.85rem;
+    color: var(--gears-text-muted);
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Direction bundle
+   *
+   * The vertical layout is the unqueried base, so a browser without
+   * container-query support still renders a correct (taller) diagram.
+   * Every direction-dependent value is a custom property, which lets the
+   * layout rules below be written exactly once.
+   * ---------------------------------------------------------------- */
+  .gears-flow {
+    --flow-flow: row;
+    --flow-cols: auto;
+    --flow-col-gap: 0px;
+    /* 0, not a row-gap: the connector is in flow here and supplies the
+       spacing itself via --flow-link-pad, so the two cannot compound. */
+    --flow-row-gap: 0px;
+    --flow-link-pos: static;
+    --flow-link-inset-block: auto;
+    --flow-link-start: auto;
+    --flow-link-w: auto;
+    --flow-link-pad: var(--flow-gap-block) 0;
+    --flow-arrow-dir: column;
+    --flow-arrow-self: center;
+    --flow-rule-flex: 0 0 auto;
+    --flow-rule-w: 1px;
+    --flow-rule-h: 1.05rem;
+    --flow-chevron-rot: 90deg;
+    --flow-label-max: 26ch;
+    --flow-label-size: 0.74rem;
+  }
+
+  /* Two and three stages turn horizontal first; four stages need more
+     room, so they stay stacked until the container is wider. Keep the two
+     blocks in sync — they differ only in threshold and stage-count guard. */
+  @container gears-flow (min-width: 30rem) {
+    .gears-flow:not([data-stages='4']) .gears-flow__track {
+      --flow-flow: column;
+      --flow-cols: minmax(0, 1fr);
+      --flow-col-gap: var(--flow-gap-inline);
+      --flow-row-gap: 0px;
+      --flow-link-pos: absolute;
+      --flow-link-inset-block: 0;
+      --flow-link-start: 100%;
+      --flow-link-w: var(--flow-gap-inline);
+      --flow-link-pad: 0;
+      --flow-arrow-dir: row;
+      --flow-arrow-self: stretch;
+      --flow-rule-flex: 1 1 auto;
+      --flow-rule-w: auto;
+      --flow-rule-h: 1px;
+      --flow-chevron-rot: 0deg;
+      --flow-label-max: 100%;
+      --flow-label-size: 0.68rem;
+    }
+  }
+  @container gears-flow (min-width: 38rem) {
+    .gears-flow[data-stages='4'] .gears-flow__track {
+      --flow-flow: column;
+      --flow-cols: minmax(0, 1fr);
+      --flow-col-gap: var(--flow-gap-inline);
+      --flow-row-gap: 0px;
+      --flow-link-pos: absolute;
+      --flow-link-inset-block: 0;
+      --flow-link-start: 100%;
+      --flow-link-w: var(--flow-gap-inline);
+      --flow-link-pad: 0;
+      --flow-arrow-dir: row;
+      --flow-arrow-self: stretch;
+      --flow-rule-flex: 1 1 auto;
+      --flow-rule-w: auto;
+      --flow-rule-h: 1px;
+      --flow-chevron-rot: 0deg;
+      --flow-label-max: 100%;
+      --flow-label-size: 0.68rem;
+    }
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Track and stages
+   * ---------------------------------------------------------------- */
+  .gears-flow__track {
+    display: grid;
+    grid-auto-flow: var(--flow-flow);
+    /* minmax(0, …) rather than 1fr: an `auto` minimum would let a long
+       Rust identifier force the column wider than the container. */
+    grid-auto-columns: var(--flow-cols);
+    column-gap: var(--flow-col-gap);
+    row-gap: var(--flow-row-gap);
+    align-items: stretch;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .gears-flow__stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .gears-flow__panel {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.7rem;
+    min-width: 0;
+    padding: 0.85rem;
+    border: 1px solid var(--gears-hairline);
+    border-radius: var(--gears-radius-card);
+    /* Translucent so the blueprint grid stays faintly visible behind it. */
+    background: color-mix(in srgb, var(--gears-surface-raised) 55%, transparent);
+  }
+
+  .gears-flow__stage-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+  .gears-flow__stage-label {
+    display: flex;
+    gap: 0.5rem;
+    align-items: baseline;
+    margin: 0;
+    font-family: var(--gears-font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--gears-text);
+    overflow-wrap: anywhere;
+  }
+  .gears-flow__stage-index {
+    flex: 0 0 auto;
+    font-family: var(--sl-font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--gears-accent);
+  }
+  .gears-flow__stage-eyebrow {
+    font-family: var(--sl-font-mono);
+    font-size: 0.63rem;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--gears-text-muted);
+    overflow-wrap: anywhere;
+  }
+  .gears-flow__stage-desc {
+    margin: 0.1rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: var(--gears-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Cards
+   *
+   * `--flow-kind` is the single accent hook: one declaration per kind,
+   * consumed by the left rule, the eyebrow and the badge. Every value is
+   * a --gears-* token (or a mix of two), so both themes follow along
+   * without a single [data-theme] selector.
+   * ---------------------------------------------------------------- */
+  .gears-flow__cards {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: var(--flow-card-gap);
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .gears-flow__card {
+    --flow-kind: var(--gears-text-muted);
+
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 0.22rem;
+    min-width: 0;
+    padding: var(--flow-card-pad);
+    border: 1px solid var(--gears-hairline);
+    border-inline-start: 3px solid var(--flow-kind);
+    border-radius: calc(var(--gears-radius-card) - 10px);
+    background: var(--gears-surface);
+    transition: border-color 0.15s ease;
+  }
+  .gears-flow__card[data-kind='source'] {
+    --flow-kind: var(--gears-accent);
+  }
+  .gears-flow__card[data-kind='transform'] {
+    --flow-kind: var(--gears-steel);
+  }
+  .gears-flow__card[data-kind='artifact'] {
+    --flow-kind: var(--gears-accent-strong);
+  }
+  .gears-flow__card[data-kind='runtime'] {
+    --flow-kind: var(--gears-success);
+  }
+  .gears-flow__card[data-kind='transport'] {
+    --flow-kind: var(--gears-warning);
+  }
+  .gears-flow__card[data-kind='service'] {
+    --flow-kind: color-mix(in srgb, var(--gears-accent) 55%, var(--gears-success));
+  }
+  .gears-flow__card[data-kind='neutral'] {
+    --flow-kind: var(--gears-text-muted);
+  }
+
+  /* `border-color` resets all four edges, so the inline-start accent has to
+     be re-asserted after it — here and in :hover below. */
+  .gears-flow__card[data-emphasized] {
+    border-color: color-mix(in srgb, var(--flow-kind) 45%, var(--gears-hairline));
+    border-inline-start-color: var(--flow-kind);
+    background: color-mix(in srgb, var(--flow-kind) 8%, var(--gears-surface));
+  }
+  .gears-flow__card:hover {
+    border-color: color-mix(in srgb, var(--flow-kind) 35%, var(--gears-hairline));
+    border-inline-start-color: var(--flow-kind);
+  }
+
+  .gears-flow__card-eyebrow {
+    font-family: var(--sl-font-mono);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--flow-kind);
+    overflow-wrap: anywhere;
+  }
+  .gears-flow__card-title {
+    margin: 0;
+    font-family: var(--gears-font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--gears-text);
+    overflow-wrap: anywhere;
+  }
+  .gears-flow__card-code {
+    display: block;
+    font-family: var(--sl-font-mono);
+    font-size: 0.72rem;
+    line-height: 1.45;
+    color: var(--gears-text-muted);
+    background: none;
+    border: 0;
+    padding: 0;
+    /* `anywhere` (not break-word) is what actually shrinks the min-content
+       contribution of `#[toolkit::rest_contract] trait PaymentApiRest`. */
+    overflow-wrap: anywhere;
+  }
+  .gears-flow__card-desc {
+    margin: 0.15rem 0 0;
+    font-size: 0.76rem;
+    line-height: 1.5;
+    color: var(--gears-text-muted);
+    overflow-wrap: anywhere;
+  }
+  .gears-flow__card-badge {
+    align-self: flex-start;
+    margin-top: 0.3rem;
+    padding: 0.08rem 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--flow-kind) 40%, var(--gears-hairline));
+    border-radius: var(--gears-radius-pill);
+    background: color-mix(in srgb, var(--flow-kind) 12%, transparent);
+    font-family: var(--sl-font-mono);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--flow-kind);
+    overflow-wrap: anywhere;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Connector
+   *
+   * A flexing 1px rule plus one small rotated chevron: the line length is
+   * free in both axes, and reorienting costs two declarations. Horizontal
+   * mode drops it into the real grid gap, so the label can never overlap a
+   * card; vertical mode leaves it in flow, so a long label just pushes the
+   * next stage down.
+   * ---------------------------------------------------------------- */
+  .gears-flow__link {
+    position: var(--flow-link-pos);
+    inset-block: var(--flow-link-inset-block);
+    inset-inline-start: var(--flow-link-start);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    width: var(--flow-link-w);
+    padding: var(--flow-link-pad);
+    color: var(--flow-line);
+  }
+  .gears-flow__arrow {
+    display: flex;
+    flex-direction: var(--flow-arrow-dir);
+    align-items: center;
+    justify-content: center;
+    align-self: var(--flow-arrow-self);
+    width: 100%;
+  }
+  .gears-flow__rule {
+    display: block;
+    flex: var(--flow-rule-flex);
+    width: var(--flow-rule-w);
+    height: var(--flow-rule-h);
+    background: currentColor;
+  }
+  .gears-flow__chevron {
+    display: block;
+    flex: 0 0 auto;
+    overflow: visible;
+    transform: rotate(var(--flow-chevron-rot));
+  }
+  .gears-flow__transition {
+    max-width: var(--flow-label-max);
+    font-size: var(--flow-label-size);
+    line-height: 1.3;
+    text-align: center;
+    color: var(--gears-text-muted);
+    overflow-wrap: anywhere;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Caption
+   * ---------------------------------------------------------------- */
+  .gears-flow__caption {
+    margin-top: 1rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--gears-hairline);
+    font-family: var(--sl-font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    line-height: 1.5;
+    color: var(--gears-text-muted);
+    text-align: center;
+  }
+
+  /* ---------------------------------------------------------------- *
+   * Compact variant
+   * ---------------------------------------------------------------- */
+  .gears-flow[data-compact] {
+    padding: 0.9rem;
+    font-size: 0.84rem;
+    --flow-card-pad: 0.5rem 0.6rem;
+    --flow-card-gap: 0.35rem;
+    --flow-gap-block: 0.5rem;
+  }
+  .gears-flow[data-compact] .gears-flow__panel {
+    padding: 0.65rem;
+    gap: 0.55rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gears-flow__card {
+      transition: none;
+    }
+  }
+
+  /* A horizontal four-column diagram does not survive an A4 page. The
+     `[data-stages]` qualifier is load-bearing: it matches the specificity of
+     the @container rules above (0,3,0) so that source order decides, instead
+     of a wide print canvas keeping the horizontal layout. */
+  @media print {
+    .gears-flow[data-stages] .gears-flow__track {
+      --flow-flow: row;
+      --flow-cols: auto;
+      --flow-col-gap: 0px;
+      --flow-row-gap: 0px;
+      --flow-link-pos: static;
+      --flow-link-inset-block: auto;
+      --flow-link-start: auto;
+      --flow-link-w: auto;
+      --flow-link-pad: var(--flow-gap-block) 0;
+      --flow-arrow-dir: column;
+      --flow-arrow-self: center;
+      --flow-rule-flex: 0 0 auto;
+      --flow-rule-w: 1px;
+      --flow-rule-h: 1.05rem;
+      --flow-chevron-rot: 90deg;
+      --flow-label-max: 26ch;
+      --flow-label-size: 0.74rem;
+    }
+  }
+
+  /* Every colour here is a --gears-* token or a color-mix() of tokens, so
+     the light/dark swap is automatic and no :root[data-theme] rule needs
+     to be hoisted into theme.css (cf. the note in ConceptDiagram.astro). */
+</style>
